@@ -613,7 +613,7 @@ PlayerSettings:
   cloudServicesEnabled:
     UNet: 1
   facebookSdkVersion: 7.9.4
-  apiCompatibilityLevel: 2
+  apiCompatibilityLevel: 3
   cloudProjectId: 5d7992e3-f4c4-45d3-bd0e-01078833d8ed
   projectName: Rhythm
   organizationId: gernknoedel

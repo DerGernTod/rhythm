@@ -124,6 +124,7 @@ GameObject:
   - component: {fileID: 27712823}
   - component: {fileID: 27712822}
   - component: {fileID: 27712821}
+  - component: {fileID: 27712824}
   m_Layer: 0
   m_Name: Canvas
   m_TagString: Untagged
@@ -207,6 +208,19 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &27712824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 27712819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c4ad26391de09543aee6abef8d5b654, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _clipBeat: {fileID: 0}
+  _beatBlendOverlayImage: {fileID: 267985347}
 --- !u!1 &241817769
 GameObject:
   m_ObjectHideFlags: 0
