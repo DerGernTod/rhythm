@@ -1,0 +1,6 @@
+.idea/
+Assembly*.csproj
+Library/
+Packages/
+Temp/
+obj/
