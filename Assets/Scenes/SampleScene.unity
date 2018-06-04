@@ -423,29 +423,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2062843563}
-  - component: {fileID: 2062843562}
   - component: {fileID: 2062843564}
   m_Layer: 0
-  m_Name: Managers
+  m_Name: ServiceLocator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2062843562
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 2062843561}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c4ad26391de09543aee6abef8d5b654, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _beatsPerSecond: 0.75
-  _clipBeat: {fileID: 0}
-  _beatBlendOverlayImage: {fileID: 267985347}
 --- !u!224 &2062843563
 RectTransform:
   m_ObjectHideFlags: 0
@@ -472,6 +457,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2062843561}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afae56fafc014714b7830988dd3dd6ea, type: 3}
+  m_Script: {fileID: 11500000, guid: 6bfaec2d3129425f93dbb9a501f3e119, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

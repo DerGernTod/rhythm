@@ -20,7 +20,7 @@ namespace Services {
         public Song CheckSongs(float[] beats) {
             List<Song> matchingSongs = _songs.Where(song => song.Contains(beats)).ToList();
             if (matchingSongs.Count != 1) {
-                Debug.Log("More than one song matches!");
+                Debug.Log(matchingSongs.Count + " songs match!");
             } else if (matchingSongs[0].Matches(beats)){
                 return matchingSongs[0];
             }

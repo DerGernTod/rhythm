@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
+using Managers;
 using UnityEngine;
 
 namespace Rhythm {
@@ -15,8 +17,15 @@ namespace Rhythm {
         }
 
         public bool Contains(float[] beats) {
-            for (int i = beats.Length - 1; i >= 0; i--) {
-                if (Mathf.Abs(beats[i] - _beats[i]) > .25f) {
+            if (beats.Length > _beats.Length) {
+                return false;
+            }
+            Debug.Log("Comparing received beats " 
+                      + string.Join(", ", beats.Select(b => b.ToString(CultureInfo.CurrentCulture)))
+                      + " to song: " 
+                      + string.Join(", ", _beats.Select(b => b.ToString(CultureInfo.CurrentCulture))));
+            for (int i = 0; i < beats.Length; i++) {
+                if (Mathf.Abs(beats[i] - _beats[i]) > BeatInputService.FailTolerance) {
                     return false;
                 }
             }
