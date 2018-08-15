@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using Managers;
+using Services;
 using UnityEngine;
 
 namespace Rhythm {
-    public abstract class Song {
+    public class Song {
+        public event Action<BeatQuality> OnCommandExecuted;
         private readonly float[] _beats;
 
-        protected Song(float[] beats) {
-            if (beats.Any(beat => beat >= 4)) {
-                throw new Exception("A song mustn't be longer than 4 beats!");
+        public Song(float[] beats) {
+            if (beats.Any(beat => beat >= 4) || Mathf.Abs(beats[0] - 0) > float.Epsilon) {
+                throw new Exception("A song mustn't be longer than 4 beats and must start at 0!");
             }
 
             _beats = beats;
@@ -20,10 +21,6 @@ namespace Rhythm {
             if (beats.Length > _beats.Length) {
                 return false;
             }
-            Debug.Log("Comparing received beats " 
-                      + string.Join(", ", beats.Select(b => b.ToString(CultureInfo.CurrentCulture)))
-                      + " to song: " 
-                      + string.Join(", ", _beats.Select(b => b.ToString(CultureInfo.CurrentCulture))));
             for (int i = 0; i < beats.Length; i++) {
                 if (Mathf.Abs(beats[i] - _beats[i]) > BeatInputService.FailTolerance) {
                     return false;
@@ -37,6 +34,8 @@ namespace Rhythm {
             return beats.Length == _beats.Length && Contains(beats);
         }
 
-        public abstract void ExecuteCommand();
+        public void ExecuteCommand(BeatQuality beatQuality) {
+            OnCommandExecuted?.Invoke(beatQuality);
+        }
     }
 }

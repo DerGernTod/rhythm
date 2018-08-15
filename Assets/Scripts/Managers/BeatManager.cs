@@ -17,26 +17,40 @@ namespace Managers {
 			{ "to", 0 },
 			{ "onupdate", "UpdateOverlayAlpha" }
 		};
+
+		private AudioService _audioService;
 		
 		// Use this for initialization
 		private void Start () {
 			_startBeat = AudioSettings.dspTime;
+			_audioService = ServiceLocator.Get<AudioService>();
 			UpdateOverlayAlpha(0);
 			UpdateBeatsPerSecond(BeatInputService.BeatTime);
-			ServiceLocator.Get<BeatInputService>().OnBeatHit += quality => {
-				if (quality == BeatInputService.Quality.Start) {
-					UpdateBeatsPerSecond(BeatInputService.BeatTime);
-				}
-			};
+			ServiceLocator.Get<BeatInputService>().OnBeatHit += OnBeatHit;
 		}
-	
+
+		private void OnDestroy() {
+			ServiceLocator.Get<BeatInputService>().OnBeatHit -= OnBeatHit;
+		}
+
+		private void OnBeatHit(BeatQuality quality, float diff) {
+			if (quality == BeatQuality.Start) {
+				UpdateBeatsPerSecond(BeatInputService.BeatTime);
+			}
+		}
+
 		// Update is called once per frame
 		private void Update () {
 			int curBeat = (int) Math.Floor((AudioSettings.dspTime - _startBeat) / BeatInputService.BeatTime);
 			if (!(curBeat > _prevCurBeat + BeatInputService.BeatTime)) return;
-			// GetComponent<AudioSource>().PlayOneShot(_clipBeat);
+			TriggerBeat(curBeat);
+			
+		}
+
+		private void TriggerBeat(int prevBeat) {
+			_audioService.PlayOneShot(_clipBeat);
 			iTween.ValueTo(gameObject, _overlayFadeHashtable);
-			_prevCurBeat = curBeat;
+			_prevCurBeat = prevBeat;
 		}
 
 		[UsedImplicitly]
@@ -47,8 +61,9 @@ namespace Managers {
 		}
 		
 		public void UpdateBeatsPerSecond(float bps) {
+			_startBeat = AudioSettings.dspTime - BeatInputService.BeatTime;
 			_overlayFadeHashtable["time"] = bps * .9f;
-			_prevCurBeat = (int) Math.Floor((AudioSettings.dspTime - _startBeat) / BeatInputService.BeatTime);
+			TriggerBeat((int) Math.Floor((AudioSettings.dspTime - _startBeat) / BeatInputService.BeatTime));
 		}
 	}
 }

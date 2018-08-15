@@ -4,19 +4,23 @@ using UnityEngine;
 using Utils;
 
 namespace Services {
+    [RequireComponent(typeof(AudioSource))]
     public class ServiceLocator : MonoBehaviour {
-        private static SerializableDictionary<Type, IService> _services;
+        [SerializeField]
+        private static ServiceDictionary _services;
         [SerializeField]
         private IUpdateableService[] _updateableServices;
         private void Awake() {
             BeatInputService beatInputService = new BeatInputService(this);
-            _services = new SerializableDictionary<Type, IService> {
+            _services = new ServiceDictionary {
                 { typeof(SongService), new SongService() },
-                { typeof(BeatInputService), beatInputService }
+                { typeof(BeatInputService), beatInputService },
+                { typeof(AudioService), new AudioService(GetComponent<AudioSource>())},
+                { typeof(UnitService), new UnitService() }
             };
             _updateableServices = new IUpdateableService[] {
                 beatInputService
-            };
+            }; 
 
             foreach (IService service in _services.Values) {
                 service.Initialize();

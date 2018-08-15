@@ -1,0 +1,28 @@
+{
+  "sounds": [
+    {
+      "originalName": "240472__godowan__small-drum.wav",
+      "name": "small-drum",
+      "author": "Godowan",
+      "url": "https://freesound.org/people/Godowan/sounds/240472/"
+    },
+    {
+      "originalName": "274775__ianstargem__simple-kick-drum",
+      "name": "kick-drum",
+      "author": "IanStarGem",
+      "url": "https://freesound.org/people/IanStarGem/sounds/274775/"
+    },
+    {
+      "originalName": "103365__dmlandrum__dml-snare-drum",
+      "name": "snare-drum",
+      "author": "dmlandrum",
+      "url": "https://freesound.org/people/dmlandrum/sounds/103365/"
+    },
+    {
+      "originalName": "187994__theminkman__wooden-junk-tom-lower",
+      "name": "wood-junk-drum",
+      "author": "TheMinkman",
+      "url": "https://freesound.org/people/TheMinkman/sounds/187994/"
+    }
+  ]
+}
