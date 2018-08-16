@@ -8,8 +8,10 @@ namespace Services {
     [Serializable]
     public class BeatInputService : IUpdateableService {
         public event Action OnBeatLost;
+        public event Action OnStreakLost;
         public event Action<BeatQuality, float> OnBeatHit;
-        public event Action<Song, BeatQuality> OnSongComplete;
+        public event Action<Song> OnExecutionStarted;
+        public event Action<Song> OnExecutionFinished;
         public const float BeatTime = .75f;
         public const float HalfBeatTime = BeatTime / 2f;
         public const float FailTolerance = .25f;
@@ -25,7 +27,7 @@ namespace Services {
         private SongService _songService;
         private readonly List<float> _currentBeats = new List<float>();
         private readonly MonoBehaviour _coroutineProvider;
-        private bool _isExecutingCommands;
+        private Song _currentSong;
 
         public BeatInputService(MonoBehaviour coroutineProvider) {
             _coroutineProvider = coroutineProvider;
@@ -35,7 +37,7 @@ namespace Services {
             // this is just for demo/debug
             OnBeatHit += (quality, diff) => Debug.Log("Beat hit: " + quality + " - diff: " + diff);
             OnBeatLost += () => Debug.Log("Beat lost...");
-            OnSongComplete += (song, quality) => song.ExecuteCommand(quality);
+            OnStreakLost += () => Debug.Log("Streak lost...");
         }
 
         public void PostInitialize() {
@@ -49,9 +51,9 @@ namespace Services {
             // todo: our beat should only drop if we didn't manage to follow a completed song after 4 beats
             // so store the time of our latest successful song, wait 4 beats and then compare for beat lost event
             bool mouseButtonDown = Input.GetMouseButtonDown(0);
-            if ((_hasBeat && _currentBeatRunTime >= 8 * BeatTime + FailTolerance && _beatStarterEnabled)
-                || (mouseButtonDown && _isExecutingCommands)) {
-                HandleBeatLost();
+            if (_hasBeat && _currentBeatRunTime >= 8 * BeatTime + FailTolerance && _beatStarterEnabled
+                || mouseButtonDown && _currentSong != null) {
+                HandleBeatLost(true);
                 return;
             }
 
@@ -60,8 +62,13 @@ namespace Services {
             }
         }
 
-        private void HandleBeatLost() {
-            OnBeatLost?.Invoke();
+        private void HandleBeatLost(bool justLoseStreak = false) {
+            if (justLoseStreak) {
+                OnStreakLost?.Invoke();
+            } else {
+                OnBeatLost?.Invoke();
+            }
+
             _numSuccessfulTacts = 0;
             _hasBeat = false;
             ResetBeatAfterSeconds(1);
@@ -71,7 +78,11 @@ namespace Services {
             _currentBeats.Clear();
             _beatStarterEnabled = false;
             _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(time, () => {
-                _isExecutingCommands = false;
+                if (_currentSong != null) {
+                    _currentSong.FinishCommandExecution();
+                    OnExecutionFinished?.Invoke(_currentSong);
+                }
+                _currentSong = null;
                 _beatStarterEnabled = true;
             }));
         }
@@ -102,22 +113,26 @@ namespace Services {
                 _currentBeats.Add(targetBeatTime / BeatTime);
                 _prevBeatTimeDiff = beatTimeDiff;
             }
-            OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff);
 
             _hasBeat = true;
             float[] beatsAsArray = _currentBeats.ToArray();
             List<Song> matchingSongs = _songService.CheckSongs(beatsAsArray);
+            
             if (matchingSongs.Count == 1 && matchingSongs[0].Matches(beatsAsArray)) {
-                OnSongComplete?.Invoke(matchingSongs[0], hitBeatQuality);
+                OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff);
+                _currentSong = matchingSongs[0];
+                _currentSong.ExecuteCommand(hitBeatQuality, _numSuccessfulTacts);
+                OnExecutionStarted?.Invoke(_currentSong);
                 _numSuccessfulTacts++;
-                Debug.Log("Num successful tacts: " + _numSuccessfulTacts);
-                _isExecutingCommands = true;
                 ResetBeatAfterSeconds(BeatTime * 4);
+                return;
+            } 
+            if (matchingSongs.Count == 0) {
+                hitBeatQuality = BeatQuality.Miss;
+                Debug.Log("No songs detected with that beat!");
             }
-            if (hitBeatQuality == BeatQuality.Miss || matchingSongs.Count != 1 && _currentBeatRunTime > BeatTime * 4) {
-                if (matchingSongs.Count > 1) {
-                    Debug.LogError("Detected " + matchingSongs.Count + " matching songs although song should be finished!");
-                }
+            OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff);
+            if (hitBeatQuality == BeatQuality.Miss) {
                 HandleBeatLost();
             }
         }
