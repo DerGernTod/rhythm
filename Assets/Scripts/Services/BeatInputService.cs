@@ -14,12 +14,12 @@ namespace Services {
         public event Action<Song> OnExecutionFinished;
         public const float BeatTime = .75f;
         public const float HalfBeatTime = BeatTime / 2f;
-        public const float FailTolerance = .25f;
-        
+        public const float FailTolerance = .20f;
+        private const float MaxWaitForSecondTact = 8 * BeatTime + FailTolerance;
+
         private double _currentBeatStartTime;
         private double _lastBeatTime;
         private float _givenBeat;
-        private float _prevBeatTimeDiff;
         private bool _hasBeat;
         private bool _beatStarterEnabled = true;
         private double _currentBeatRunTime;
@@ -56,10 +56,10 @@ namespace Services {
         public void Update(float deltaTime) {
             _currentUpdate();
             _currentBeatRunTime = AudioSettings.dspTime - _currentBeatStartTime;
-            // todo: our beat should only drop if we didn't manage to follow a completed song after 4 beats
-            // so store the time of our latest successful song, wait 4 beats and then compare for beat lost event
             bool mouseButtonDown = Input.GetMouseButtonDown(0);
-            if (_hasBeat && _currentBeatRunTime >= 8 * BeatTime + FailTolerance && _beatStarterEnabled
+            // break the streak in case the current beat was not successfully started after a full tact (MaxWaitForSecondTact)
+            // break the streak if a drum was hit while a song is executing
+            if (_hasBeat && _currentBeatRunTime >= MaxWaitForSecondTact && _beatStarterEnabled
                 || mouseButtonDown && _currentSong != null) {
                 Debug.LogFormat("Streak lost. Details: _hasBeat: {0}, " +
                                 "_currentBeatRunTime: {1} vs. max: {2}" +
@@ -68,11 +68,19 @@ namespace Services {
                                 "_currentSong is null: {5}", 
                     _hasBeat,
                     _currentBeatRunTime,
-                    8 * BeatTime + FailTolerance,
+                    MaxWaitForSecondTact,
                     _beatStarterEnabled,
                     mouseButtonDown,
                     _currentSong == null);
                 HandleBeatLost(true);
+                return;
+            }
+
+            // break the beat if there was no hit after the max beat time
+            if (_hasBeat
+                && _lastBeatTime > AudioSettings.dspTime + FailTolerance
+                && _currentBeatRunTime < 4 * BeatTime + FailTolerance) {
+                HandleBeatLost();
                 return;
             }
 
@@ -109,30 +117,15 @@ namespace Services {
         }
 
         private void HandleBeat() {
-            BeatQuality hitBeatQuality = BeatQuality.Miss;
+            BeatQuality hitBeatQuality;
             float beatTimeDiff = 0;
+            _lastBeatTime = RoundToBeatTime((float) AudioSettings.dspTime);
             if (!_hasBeat || _currentBeatRunTime >= 8 * BeatTime - FailTolerance) {
-                _currentBeatStartTime = AudioSettings.dspTime;
-                _currentBeatRunTime = 0;
-                _currentBeats.Add(0);
-                _prevBeatTimeDiff = 0;
+                StartTact();
                 hitBeatQuality = BeatQuality.Start;
             } else {
-                float currentBeatRunTimeFloat = (float) _currentBeatRunTime;
-                int currentBeatNum = Mathf.RoundToInt(currentBeatRunTimeFloat / HalfBeatTime);
-                float targetBeatTime = currentBeatNum * HalfBeatTime;
-                beatTimeDiff = targetBeatTime - _prevBeatTimeDiff - currentBeatRunTimeFloat;
-                float absBeatTimeDiff = Mathf.Abs(beatTimeDiff);
-
-                if (absBeatTimeDiff < FailTolerance * .15f) {
-                    hitBeatQuality = BeatQuality.Perfect;
-                } else if (absBeatTimeDiff < FailTolerance * .5f) {
-                    hitBeatQuality = BeatQuality.Good;
-                } else if (absBeatTimeDiff < FailTolerance) {
-                    hitBeatQuality = BeatQuality.Bad;
-                }
-                _currentBeats.Add(targetBeatTime / BeatTime);
-                _prevBeatTimeDiff = beatTimeDiff;
+                beatTimeDiff = CalcBeatDiff();
+                hitBeatQuality = CalcBeatQuality(beatTimeDiff);
             }
 
             _hasBeat = true;
@@ -151,6 +144,44 @@ namespace Services {
             if (hitBeatQuality == BeatQuality.Miss) {
                 HandleBeatLost();
             }
+        }
+
+        private static BeatQuality CalcBeatQuality(float beatTimeDiff) {
+            float absBeatTimeDiff = Mathf.Abs(beatTimeDiff);
+
+            if (absBeatTimeDiff < FailTolerance * .15f) {
+                return BeatQuality.Perfect;
+            }
+
+            if (absBeatTimeDiff < FailTolerance * .5f) {
+                return BeatQuality.Good;
+            }
+
+            if (absBeatTimeDiff < FailTolerance) {
+                return BeatQuality.Bad;
+            }
+
+            return BeatQuality.Miss;
+        }
+
+        private float CalcBeatDiff() {
+            float currentBeatRunTimeFloat = (float) _currentBeatRunTime;
+            float targetBeatTime = RoundToBeatTime(currentBeatRunTimeFloat);
+            float beatTimeDiff = targetBeatTime - currentBeatRunTimeFloat;
+            _currentBeats.Add(targetBeatTime / BeatTime);
+            return beatTimeDiff;
+        }
+
+        private float RoundToBeatTime(float time) {
+            int currentBeatNum = Mathf.RoundToInt(time / HalfBeatTime);
+            return currentBeatNum * HalfBeatTime;
+        } 
+
+        private void StartTact() {
+            
+            _currentBeatStartTime = RoundToBeatTime((float) AudioSettings.dspTime);
+            _currentBeatRunTime = 0;
+            _currentBeats.Add(0);
         }
 
         private void ExecuteSong(BeatQuality hitBeatQuality, float beatTimeDiff, Song matchingSong) {
