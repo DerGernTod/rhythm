@@ -1,5 +1,6 @@
 ﻿using System;
 using Rhythm;
+using Rhythm.Commands;
 using Services;
 using UnityEngine;
 using Utils;
@@ -10,10 +11,17 @@ namespace Units {
 		private int _unitId;
 		private string _name;
 		private int _health;
-		private float _movementSpeed;
+
+		public float MovementSpeed { get; private set;}
+
 		private Sprite _sprite;
 		private Action _updateFunc;
+		private CommandData[] _commandData;
 
+		private Action<BeatQuality, int>[] _executions;
+		private Action[] _finishes;
+		private Action[] _updates;
+		
 		private void Awake() {
 			_updateFunc = Constants.Noop;
 		}
@@ -21,13 +29,28 @@ namespace Units {
 		public void Initialize(UnitData unitData) {
 			_name = unitData.name;
 			_health = unitData.Health;
-			_movementSpeed = unitData.MovementSpeed;
+			MovementSpeed = unitData.MovementSpeed;
 			_sprite = unitData.Sprite;
 			_unitId = _ids++;
+			_commandData = unitData.CommandData;
 			SpriteRenderer spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
 			spriteRenderer.sprite = _sprite;
 			// TODO: handle unitData.WeaponData
-			ServiceLocator.Get<SongService>().Get("March").OnCommandExecuted += OnMarch;
+			_executions = new Action<BeatQuality, int>[_commandData.Length];
+			_finishes = new Action[_commandData.Length];
+			_updates = new Action[_commandData.Length];
+			for (int i = 0; i < _commandData.Length; i++) {
+				CommandData commandData = _commandData[i];
+				string songName = commandData.Song;
+				_executions[i] = (quality, streakLenght) =>
+					commandData.SongCommandExecuted(quality, streakLenght, this);
+				_finishes[i] = () => commandData.SongCommandExecutionFinished(this);
+				_updates[i] = () => commandData.SongCommandUpdate(this);
+				ServiceLocator.Get<SongService>().Get(songName).CommandExecuted += _executions[i];
+				ServiceLocator.Get<SongService>().Get(songName).CommandExecutionFinished += _finishes[i];
+				ServiceLocator.Get<SongService>().Get(songName).CommandExecutionUpdate += _updates[i];
+			}
+			
 			ServiceLocator.Get<BeatInputService>().OnBeatLost += OnBeatLost;
 			ServiceLocator.Get<BeatInputService>().OnExecutionFinished += OnExecutionFinished;
 		}
@@ -37,7 +60,13 @@ namespace Units {
 		}
 
 		private void OnDestroy() {
-			ServiceLocator.Get<SongService>().Get("March").OnCommandExecuted -= OnMarch;
+			for (int i = 0; i < _commandData.Length; i++) {
+				CommandData commandData = _commandData[i];
+				string songName = commandData.Song;
+				ServiceLocator.Get<SongService>().Get(songName).CommandExecuted -= _executions[i];
+				ServiceLocator.Get<SongService>().Get(songName).CommandExecutionFinished -= _finishes[i];
+				ServiceLocator.Get<SongService>().Get(songName).CommandExecutionUpdate -= _updates[i];
+			}
 			ServiceLocator.Get<BeatInputService>().OnBeatLost -= OnBeatLost;
 			ServiceLocator.Get<BeatInputService>().OnExecutionFinished -= OnExecutionFinished;
 		}
@@ -46,22 +75,12 @@ namespace Units {
 			_updateFunc = DropUpdate;
 		}
 
-		private void OnMarch(BeatQuality quality, int streakLength) {
-			Debug.Log("Unit " + _unitId + " " + _name + " marching!");
-			_updateFunc = MarchUpdate;
-		}
-
 		private void OnExecutionFinished(Song song) {
 			_updateFunc = Constants.Noop;
 		}
 		
 		private void DropUpdate() {
 			
-		}
-
-
-		private void MarchUpdate() {
-			transform.Translate(Time.deltaTime * _movementSpeed * Vector3.up);
 		}
 	}
 }

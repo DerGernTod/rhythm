@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rhythm;
 using UnityEngine;
 using Utils;
@@ -28,7 +29,7 @@ namespace Services {
         private readonly List<float> _currentBeats = new List<float>();
         private readonly MonoBehaviour _coroutineProvider;
         private Song _currentSong;
-
+        private Action _currentUpdate = Constants.Noop;
         public BeatInputService(MonoBehaviour coroutineProvider) {
             _coroutineProvider = coroutineProvider;
         }
@@ -38,6 +39,8 @@ namespace Services {
             OnBeatHit += (quality, diff) => Debug.Log("Beat hit: " + quality + " - diff: " + diff);
             OnBeatLost += () => Debug.Log("Beat lost...");
             OnStreakLost += () => Debug.Log("Streak lost...");
+            OnExecutionStarted += song => Debug.Log("Executing song " + song.Name);
+            OnExecutionFinished += song => Debug.Log("Finished executing song " + song.Name);
         }
 
         public void PostInitialize() {
@@ -47,12 +50,24 @@ namespace Services {
         }
 
         public void Update(float deltaTime) {
+            _currentUpdate();
             _currentBeatRunTime = AudioSettings.dspTime - _currentBeatStartTime;
             // todo: our beat should only drop if we didn't manage to follow a completed song after 4 beats
             // so store the time of our latest successful song, wait 4 beats and then compare for beat lost event
             bool mouseButtonDown = Input.GetMouseButtonDown(0);
             if (_hasBeat && _currentBeatRunTime >= 8 * BeatTime + FailTolerance && _beatStarterEnabled
                 || mouseButtonDown && _currentSong != null) {
+                Debug.LogFormat("Streak lost. Details: _hasBeat: {0}, " +
+                                "_currentBeatRunTime: {1} vs. max: {2}" +
+                                "_beatStarterEnabled: {3}" +
+                                "mouseButtonDown: {4}" +
+                                "_currentSong is null: {5}", 
+                    _hasBeat,
+                    _currentBeatRunTime,
+                    8 * BeatTime + FailTolerance,
+                    _beatStarterEnabled,
+                    mouseButtonDown,
+                    _currentSong == null);
                 HandleBeatLost(true);
                 return;
             }
@@ -82,6 +97,8 @@ namespace Services {
                     _currentSong.FinishCommandExecution();
                     OnExecutionFinished?.Invoke(_currentSong);
                 }
+
+                _currentUpdate = Constants.Noop;
                 _currentSong = null;
                 _beatStarterEnabled = true;
             }));
@@ -123,13 +140,14 @@ namespace Services {
                 _currentSong = matchingSongs[0];
                 _currentSong.ExecuteCommand(hitBeatQuality, _numSuccessfulTacts);
                 OnExecutionStarted?.Invoke(_currentSong);
+                _currentUpdate = _currentSong.ExecuteCommandUpdate;
                 _numSuccessfulTacts++;
                 ResetBeatAfterSeconds(BeatTime * 4);
                 return;
             } 
             if (matchingSongs.Count == 0) {
                 hitBeatQuality = BeatQuality.Miss;
-                Debug.Log("No songs detected with that beat!");
+                Debug.Log("No songs detected with that beat! Current beat was " + string.Join(",", _currentBeats));
             }
             OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff);
             if (hitBeatQuality == BeatQuality.Miss) {

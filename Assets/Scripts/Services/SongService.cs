@@ -15,7 +15,7 @@ namespace Services {
             _songs = new SongDictionary();
             foreach (SongData song in songData) {
                 Debug.Log("Loaded song " + song.name);
-                _songs.Add(song.name, new Song(song.Beats));
+                _songs.Add(song.name, new Song(song.Beats, song.name));
             }
         }
 

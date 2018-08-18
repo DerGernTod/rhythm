@@ -15,3 +15,5 @@ MonoBehaviour:
   MovementSpeed: 1
   WeaponData: {fileID: 11400000, guid: 1474d91a03e49534fa5fcc5fc5fa6940, type: 2}
   Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  CommandData:
+  - {fileID: 11400000, guid: 74a7f7714674ccf4fa6d807efbc42138, type: 2}

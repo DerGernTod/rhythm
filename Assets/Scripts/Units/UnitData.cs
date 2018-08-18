@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Rhythm;
+using Rhythm.Commands;
+using UnityEngine;
 using Weapons;
 
 namespace Units {
@@ -9,5 +11,6 @@ namespace Units {
         public WeaponData WeaponData;
         // TODO: graphics
         public Sprite Sprite;
+        public CommandData[] CommandData;
     }
 }
