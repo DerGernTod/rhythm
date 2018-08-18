@@ -22,6 +22,10 @@ namespace Services {
         public void PostInitialize() {
         }
 
+        public void Destroy() {
+            _songs.Clear();
+        }
+
         public Song Get(string songName) {
             Song song;
             if (_songs.TryGetValue(songName, out song)) {

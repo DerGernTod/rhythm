@@ -33,9 +33,9 @@ namespace Managers {
 			ServiceLocator.Get<BeatInputService>().OnBeatHit -= OnBeatHit;
 		}
 
-		private void OnBeatHit(BeatQuality quality, float diff) {
-			if (quality == BeatQuality.Start) {
-				UpdateBeatsPerSecond(BeatInputService.BeatTime);
+		private void OnBeatHit(BeatQuality quality, float diff, int streak) {
+			if (quality == BeatQuality.Start && streak == 0) {
+				// UpdateBeatsPerSecond(BeatInputService.BeatTime);
 			}
 		}
 

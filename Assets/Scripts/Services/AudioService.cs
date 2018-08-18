@@ -16,5 +16,9 @@ namespace Services {
 
 		public void PostInitialize() {
 		}
+
+		public void Destroy() {
+			
+		}
 	}
 }

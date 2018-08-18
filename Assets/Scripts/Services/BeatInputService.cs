@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Rhythm;
 using UnityEngine;
 using Utils;
@@ -10,7 +9,7 @@ namespace Services {
     public class BeatInputService : IUpdateableService {
         public event Action OnBeatLost;
         public event Action OnStreakLost;
-        public event Action<BeatQuality, float> OnBeatHit;
+        public event Action<BeatQuality, float, int> OnBeatHit;
         public event Action<Song> OnExecutionStarted;
         public event Action<Song> OnExecutionFinished;
         public const float BeatTime = .75f;
@@ -36,7 +35,7 @@ namespace Services {
         
         public void Initialize() {
             // this is just for demo/debug
-            OnBeatHit += (quality, diff) => Debug.Log("Beat hit: " + quality + " - diff: " + diff);
+            OnBeatHit += (quality, diff, streak) => Debug.Log("Beat hit: " + quality + " - diff: " + diff + " - streak: " + streak);
             OnBeatLost += () => Debug.Log("Beat lost...");
             OnStreakLost += () => Debug.Log("Streak lost...");
             OnExecutionStarted += song => Debug.Log("Executing song " + song.Name);
@@ -47,6 +46,11 @@ namespace Services {
             _songService = ServiceLocator.Get<SongService>();
             _currentBeatStartTime = AudioSettings.dspTime;
             _currentBeatRunTime = 0;
+        }
+
+        public void Destroy() {
+            _currentBeats.Clear();
+            _currentUpdate = Constants.Noop;
         }
 
         public void Update(float deltaTime) {
@@ -136,23 +140,27 @@ namespace Services {
             List<Song> matchingSongs = _songService.CheckSongs(beatsAsArray);
             
             if (matchingSongs.Count == 1 && matchingSongs[0].Matches(beatsAsArray)) {
-                OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff);
-                _currentSong = matchingSongs[0];
-                _currentSong.ExecuteCommand(hitBeatQuality, _numSuccessfulTacts);
-                OnExecutionStarted?.Invoke(_currentSong);
-                _currentUpdate = _currentSong.ExecuteCommandUpdate;
-                _numSuccessfulTacts++;
-                ResetBeatAfterSeconds(BeatTime * 4);
+                ExecuteSong(hitBeatQuality, beatTimeDiff, matchingSongs[0]);
                 return;
             } 
             if (matchingSongs.Count == 0) {
                 hitBeatQuality = BeatQuality.Miss;
                 Debug.Log("No songs detected with that beat! Current beat was " + string.Join(",", _currentBeats));
             }
-            OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff);
+            OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff, _numSuccessfulTacts);
             if (hitBeatQuality == BeatQuality.Miss) {
                 HandleBeatLost();
             }
+        }
+
+        private void ExecuteSong(BeatQuality hitBeatQuality, float beatTimeDiff, Song matchingSong) {
+            _numSuccessfulTacts++;
+            OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff, _numSuccessfulTacts);
+            _currentSong = matchingSong;
+            _currentSong.ExecuteCommand(hitBeatQuality, _numSuccessfulTacts);
+            OnExecutionStarted?.Invoke(_currentSong);
+            _currentUpdate = _currentSong.ExecuteCommandUpdate;
+            ResetBeatAfterSeconds(BeatTime * 4);
         }
     }
 }

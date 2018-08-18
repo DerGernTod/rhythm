@@ -33,7 +33,7 @@ namespace Managers {
             ServiceLocator.Get<AudioService>().PlayOneShot(_clips[BeatQuality.Miss]);
         }
         
-        private void OnBeatHit(BeatQuality quality, float diff) {
+        private void OnBeatHit(BeatQuality quality, float diff, int streak) {
             ServiceLocator.Get<AudioService>().PlayOneShot(_clips[quality]);
         }
     }

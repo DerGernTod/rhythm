@@ -37,6 +37,12 @@ namespace Services {
             }
         }
 
+        private void OnDestroy() {
+            foreach (IUpdateableService service in _updateableServices) {
+                service.Destroy();
+            }
+        }
+
         public static T Get<T>() where T : IService {
             IService service;
             if (_services.TryGetValue(typeof(T), out service)) {

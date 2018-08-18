@@ -11,7 +11,7 @@ namespace State {
             LoopingBackground background = new GameObject().AddComponent<LoopingBackground>();
             background.transform.Translate(Vector3.forward * 1);
             background.Initialize(_levelData);
-            Unit firstUnit = ServiceLocator.Get<UnitService>().Create("Circle");
+            Unit firstUnit = ServiceLocator.Get<UnitService>().CreateUnit("Circle");
             firstUnit.transform.Translate(Vector3.up * -8);
         }
     }
