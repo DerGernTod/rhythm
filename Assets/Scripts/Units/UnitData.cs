@@ -10,7 +10,7 @@ namespace Units {
         public float MovementSpeed;
         public WeaponData WeaponData;
         // TODO: graphics
-        public Sprite Sprite;
+        public GameObject Prefab;
         public CommandData[] CommandData;
     }
 }

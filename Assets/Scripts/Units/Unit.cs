@@ -14,7 +14,7 @@ namespace Units {
 
 		public float MovementSpeed { get; private set;}
 
-		private Sprite _sprite;
+		private GameObject _prefab;
 		private Action _updateFunc;
 		private CommandData[] _commandData;
 
@@ -30,11 +30,13 @@ namespace Units {
 			_name = unitData.name;
 			_health = unitData.Health;
 			MovementSpeed = unitData.MovementSpeed;
-			_sprite = unitData.Sprite;
+			_prefab = unitData.Prefab;
 			_unitId = _ids++;
 			_commandData = unitData.CommandData;
-			SpriteRenderer spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
-			spriteRenderer.sprite = _sprite;
+			GameObject visuals = Instantiate(_prefab);
+			visuals.transform.parent = transform;
+			visuals.transform.localPosition = Vector3.zero;
+			
 			// TODO: handle unitData.WeaponData
 			_executions = new Action<BeatQuality, int>[_commandData.Length];
 			_finishes = new Action[_commandData.Length];

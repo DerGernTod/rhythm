@@ -9,7 +9,7 @@ namespace Services {
     public class BeatInputService : IUpdateableService {
         public event Action OnBeatLost;
         public event Action OnStreakLost;
-        public event Action<BeatQuality, float, int> OnBeatHit;
+        public event Action<BeatQuality, float, int> BeatHit;
         public event Action<Song> OnExecutionStarted;
         public event Action<Song> OnExecutionFinished;
         public const float BeatTime = .75f;
@@ -35,7 +35,7 @@ namespace Services {
         
         public void Initialize() {
             // this is just for demo/debug
-            OnBeatHit += (quality, diff, streak) => Debug.Log("Beat hit: " + quality + " - diff: " + diff + " - streak: " + streak);
+            BeatHit += (quality, diff, streak) => Debug.Log("Beat hit: " + quality + " - diff: " + diff + " - streak: " + streak);
             OnBeatLost += () => Debug.Log("Beat lost...");
             OnStreakLost += () => Debug.Log("Streak lost...");
             OnExecutionStarted += song => Debug.Log("Executing song " + song.Name);
@@ -140,7 +140,7 @@ namespace Services {
                 hitBeatQuality = BeatQuality.Miss;
                 Debug.Log("No songs detected with that beat! Current beat was " + string.Join(",", _currentBeats));
             }
-            OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff, _numSuccessfulTacts);
+            BeatHit?.Invoke(hitBeatQuality, beatTimeDiff, _numSuccessfulTacts);
             if (hitBeatQuality == BeatQuality.Miss) {
                 HandleBeatLost();
             }
@@ -186,7 +186,7 @@ namespace Services {
 
         private void ExecuteSong(BeatQuality hitBeatQuality, float beatTimeDiff, Song matchingSong) {
             _numSuccessfulTacts++;
-            OnBeatHit?.Invoke(hitBeatQuality, beatTimeDiff, _numSuccessfulTacts);
+            BeatHit?.Invoke(hitBeatQuality, beatTimeDiff, _numSuccessfulTacts);
             _currentSong = matchingSong;
             _currentSong.ExecuteCommand(hitBeatQuality, _numSuccessfulTacts);
             OnExecutionStarted?.Invoke(_currentSong);

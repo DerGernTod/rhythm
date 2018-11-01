@@ -26,14 +26,14 @@ namespace Managers {
 			_audioService = ServiceLocator.Get<AudioService>();
 			UpdateOverlayAlpha(0);
 			UpdateBeatsPerSecond(BeatInputService.BeatTime);
-			ServiceLocator.Get<BeatInputService>().OnBeatHit += OnBeatHit;
+			ServiceLocator.Get<BeatInputService>().BeatHit += BeatHit;
 		}
 
 		private void OnDestroy() {
-			ServiceLocator.Get<BeatInputService>().OnBeatHit -= OnBeatHit;
+			ServiceLocator.Get<BeatInputService>().BeatHit -= BeatHit;
 		}
 
-		private void OnBeatHit(BeatQuality quality, float diff, int streak) {
+		private void BeatHit(BeatQuality quality, float diff, int streak) {
 			if (quality == BeatQuality.Start && streak == 0) {
 				// UpdateBeatsPerSecond(BeatInputService.BeatTime);
 			}

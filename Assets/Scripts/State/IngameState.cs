@@ -12,7 +12,9 @@ namespace State {
             background.transform.Translate(Vector3.forward * 1);
             background.Initialize(_levelData);
             Unit firstUnit = ServiceLocator.Get<UnitService>().CreateUnit("Circle");
+            Unit drummer = ServiceLocator.Get<UnitService>().CreateUnit("Drummer");
             firstUnit.transform.Translate(Vector3.up * -8);
+            drummer.transform.Translate(Vector3.up * -8.25f);
         }
     }
 }

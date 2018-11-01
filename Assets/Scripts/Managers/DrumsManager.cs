@@ -20,12 +20,12 @@ namespace Managers {
                 {BeatQuality.Start, _startClip}
             };
             _beatInputService = ServiceLocator.Get<BeatInputService>();
-            _beatInputService.OnBeatHit += OnBeatHit;
+            _beatInputService.BeatHit += BeatHit;
             _beatInputService.OnBeatLost += OnBeatLost;
         }
 
         private void OnDestroy() {
-            _beatInputService.OnBeatHit -= OnBeatHit;
+            _beatInputService.BeatHit -= BeatHit;
             _beatInputService.OnBeatLost -= OnBeatLost;
         }
 
@@ -33,7 +33,7 @@ namespace Managers {
             ServiceLocator.Get<AudioService>().PlayOneShot(_clips[BeatQuality.Miss]);
         }
         
-        private void OnBeatHit(BeatQuality quality, float diff, int streak) {
+        private void BeatHit(BeatQuality quality, float diff, int streak) {
             ServiceLocator.Get<AudioService>().PlayOneShot(_clips[quality]);
         }
     }
