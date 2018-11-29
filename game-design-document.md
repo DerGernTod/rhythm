@@ -60,6 +60,7 @@ The camp is displayed in a bird's eye view. New buildings can be built freely by
 
 #### Crafting & Resource Management
 ##### Details
-The first thing the player wants to craft is an axe to chop wood. To be able to craft this, they need to collect sticks and stones
-
+The first thing the player wants to craft is an axe to chop wood. To be able to craft this, they need to collect sticks and stones. Some resources require units to wield special items, e.g. chopping wood requires a unit to wield an axe. Back in the camp, resources can be used to craft items. Crafting items requires different buildings although there are some starting items that can just be crafted "at the campfire" (like the axe).
+##### How it works
+Resources are collected during missions with the _gather song_. When selecting a mission on the world map, all known resource types are shown so the player knows which missions he has to complete to get certain resources. Unknown ones (e.g. not yet discovered because unable to obtain with the current equipment) are shown with a question mark or similar icon.
 
