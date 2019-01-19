@@ -4,13 +4,15 @@ using Services;
 using Units;
 using UnityEngine;
 
+#pragma warning disable 0649
 namespace State {
     public class IngameState : MonoBehaviour {
-        [SerializeField] private LevelData _levelData;
+        
+        [SerializeField] private LevelData levelData;
         private void Start() {
             LoopingBackground background = new GameObject().AddComponent<LoopingBackground>();
             background.transform.Translate(Vector3.forward * 1);
-            background.Initialize(_levelData);
+            background.Initialize(levelData);
             Unit firstUnit = ServiceLocator.Get<UnitService>().CreateUnit("Circle");
             Unit drummer = ServiceLocator.Get<UnitService>().CreateUnit("Drummer");
             firstUnit.transform.Translate(Vector3.up * -8);

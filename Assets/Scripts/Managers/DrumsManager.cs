@@ -2,22 +2,23 @@
 using UnityEngine;
 using Utils;
 
+#pragma warning disable 0649
 namespace Managers {
     public class DrumsManager : MonoBehaviour {
-        [SerializeField] private AudioClip _missClip;
-        [SerializeField] private AudioClip _badClip;
-        [SerializeField] private AudioClip _goodClip;
-        [SerializeField] private AudioClip _perfectClip;
-        [SerializeField] private AudioClip _startClip;
-        [SerializeField] private QualityClipDictionary _clips;
+        [SerializeField] private AudioClip missClip;
+        [SerializeField] private AudioClip badClip;
+        [SerializeField] private AudioClip goodClip;
+        [SerializeField] private AudioClip perfectClip;
+        [SerializeField] private AudioClip startClip;
+        private QualityClipDictionary clips;
         private BeatInputService _beatInputService;
         private void Start() {
-            _clips = new QualityClipDictionary() {
-                {BeatQuality.Bad, _badClip},
-                {BeatQuality.Good, _goodClip},
-                {BeatQuality.Miss, _missClip},
-                {BeatQuality.Perfect, _perfectClip},
-                {BeatQuality.Start, _startClip}
+            clips = new QualityClipDictionary {
+                {BeatQuality.Bad, badClip},
+                {BeatQuality.Good, goodClip},
+                {BeatQuality.Miss, missClip},
+                {BeatQuality.Perfect, perfectClip},
+                {BeatQuality.Start, startClip}
             };
             _beatInputService = ServiceLocator.Get<BeatInputService>();
             _beatInputService.BeatHit += BeatHit;
@@ -30,11 +31,11 @@ namespace Managers {
         }
 
         private void OnBeatLost() {
-            ServiceLocator.Get<AudioService>().PlayOneShot(_clips[BeatQuality.Miss]);
+            ServiceLocator.Get<AudioService>().PlayOneShot(clips[BeatQuality.Miss]);
         }
         
         private void BeatHit(BeatQuality quality, float diff, int streak) {
-            ServiceLocator.Get<AudioService>().PlayOneShot(_clips[quality]);
+            ServiceLocator.Get<AudioService>().PlayOneShot(clips[quality]);
         }
     }
 }

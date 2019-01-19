@@ -5,10 +5,11 @@ using Services;
 using UnityEngine;
 using UnityEngine.UI;
 
+#pragma warning disable 0649
 namespace Managers {
 	public class BeatManager : MonoBehaviour {
-		[SerializeField] private AudioClip _clipBeat;
-		[SerializeField] private Image _beatBlendOverlayImage;
+		[SerializeField] private AudioClip clipBeat;
+		[SerializeField] private Image beatBlendOverlayImage;
 		
 		private double _startBeat;
 		private int _prevCurBeat;
@@ -48,16 +49,16 @@ namespace Managers {
 		}
 
 		private void TriggerBeat(int prevBeat) {
-			_audioService.PlayOneShot(_clipBeat);
+			_audioService.PlayOneShot(clipBeat);
 			iTween.ValueTo(gameObject, _overlayFadeHashtable);
 			_prevCurBeat = prevBeat;
 		}
 
 		[UsedImplicitly]
 		private void UpdateOverlayAlpha(float alpha) {
-			Color c = _beatBlendOverlayImage.color;
+			Color c = beatBlendOverlayImage.color;
 			c.a = alpha;
-			_beatBlendOverlayImage.color = c;
+			beatBlendOverlayImage.color = c;
 		}
 		
 		public void UpdateBeatsPerSecond(float bps) {

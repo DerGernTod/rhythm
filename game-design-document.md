@@ -6,10 +6,9 @@
 A rhythm game with strategic elements.
 
 ### Core gameplay mechanics brief
-- -one-
-- -two-
-- -three-
-- -four-
+- Rhythmic commands
+- Camp building
+- Crafting and resource management
 
 ### Target platforms
 - Android
@@ -18,6 +17,7 @@ A rhythm game with strategic elements.
 
 ### Monetization model
 Ad driven, watch ad to get resources.
+Progression enhancers via $$.
 
 ### Influences
 #### Patapon
@@ -31,9 +31,9 @@ Run through the overworld to collect stuff and craft items you need for progress
 A game where the player controls a small group of units via drum beat songs to do specific tasks, like collect and fight. The player builds up a small camp which grows bigger after getting better resources.
 
 ### Project Description
-Two weird little figures wake up in the middle of a field. They talk in icon speechbubbles. They want to build a cottage, but first need wood. For wood, they need an axe. For an axe, they need sticks and stones. The little one isn't motivated, so the big one starts to drum. The player has to hit the screen in correct timing a few times to motivate the little one (march song, tutorial).
+Two weird little figures wake up in the middle of a field. They talk in icon speechbubbles. They want to build a cottage, but first need wood. For wood, they need an axe. For an axe, they need sticks and stones. The little one isn't motivated, so the big one starts to drum. The player has to hit the screen in correct timing a few times to motivate the little one (_march song_, tutorial).
 
-Once he's motivated, a map view is shown and the player can select the "Fields". The level starts, a new song is learned (gather song). A field is shown with a few sticks and stones lying around. The formerly learned _march song_ moves the characters forward, the _gather song_ sends them to collect resources. Playing the songs correctly lets the characters collect more or move further. A level lasts for one day, so the level ends as the sun sets. Back to the camp, they can craft an axe which the smaller one is able to equip, then they rest.
+Once he's motivated, a map view is shown and the player can select the "Fields". The level starts, a new song is learned (_gather song_). A field is shown with a few sticks and stones lying around. The formerly learned _march song_ moves the characters forward, the _gather song_ sends them to collect resources. Playing the songs correctly lets the characters collect more or move further. A level lasts for one day, so the level ends as the sun sets. Back to the camp, they can craft an axe which the smaller one is able to equip, then they rest.
 
 On the next day, they can visit the forest to get wood (unit can chop wood if equipped with an axe with the gather song). In the forest, there are some smaller trees to chop (large ones can't be chopped), and they find another character. He joins their party after hearing their drums play a few correct beats. More characters can only join after building a cottage.
 
@@ -62,5 +62,5 @@ The camp is displayed in a bird's eye view. New buildings can be built freely by
 ##### Details
 The first thing the player wants to craft is an axe to chop wood. To be able to craft this, they need to collect sticks and stones. Some resources require units to wield special items, e.g. chopping wood requires a unit to wield an axe. Back in the camp, resources can be used to craft items. Crafting items requires different buildings although there are some starting items that can just be crafted "at the campfire" (like the axe).
 ##### How it works
-Resources are collected during missions with the _gather song_. When selecting a mission on the world map, all known resource types are shown so the player knows which missions he has to complete to get certain resources. Unknown ones (e.g. not yet discovered because unable to obtain with the current equipment) are shown with a question mark or similar icon.
+Resources are collected during missions with the _gather song_. When selecting a mission on the world map, all known resource types are shown so the player knows which missions he has to complete to get certain resources. Unknown ones (e.g. not yet discovered because unable to obtain with the current equipment) are only shown when the necessary equipment is available. Missions that provide new kinds of resources because of new equipment technology are highlighted.
 
