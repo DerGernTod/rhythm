@@ -138,7 +138,7 @@ namespace Services {
             } 
             if (matchingSongs.Count == 0) {
                 hitBeatQuality = BeatQuality.Miss;
-                Debug.Log("No songs detected with that beat! Current beat was " + string.Join(",", _currentBeats));
+                Debug.Log("No songs detected with that beat! Current beat was " + string.Join("-", _currentBeats));
             }
             BeatHit?.Invoke(hitBeatQuality, beatTimeDiff, _numSuccessfulTacts);
             if (hitBeatQuality == BeatQuality.Miss) {

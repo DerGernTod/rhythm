@@ -6750,6 +6750,11 @@ public class iTween : MonoBehaviour
 			}else{
 				target=gameObject;	
 			}
+			if (tweenArguments[callbackType] is Action<object>)
+			{
+				((Action<object>)tweenArguments[callbackType]).Invoke((object)tweenArguments[callbackType + "params"]);
+			}
+			else
 			
 			//throw an error if a string wasn't passed for callback:
 			if (tweenArguments[callbackType].GetType() == typeof(System.String)) {
