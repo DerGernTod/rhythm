@@ -4,11 +4,17 @@
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cae40f8909d4f1478bd3ef457c6628a, type: 3}
   m_Name: Canyon
   m_EditorClassIdentifier: 
-  BackgroundSprite: {fileID: 21300000, guid: 90988d74431cb32448110c7086cd247b, type: 3}
+  backgroundSprite: {fileID: 21300000, guid: 90988d74431cb32448110c7086cd247b, type: 3}
+  depositProbability:
+  - deposit: {fileID: 11400000, guid: fb99213e2f07e8847aa13640b979f58b, type: 2}
+    min: 1
+    max: 10
+  length: 5

@@ -1,6 +1,7 @@
 ﻿using System;
-using Rhythm;
-using Services;
+using Rhythm.Items;
+using Rhythm.Services;
+using Rhythm.Songs;
 using Units;
 using UnityEngine;
 
@@ -19,4 +20,7 @@ namespace Utils {
 
     [Serializable]
     public class SongDictionary: SerializableDictionary<string, Song> {}
+    
+    [Serializable]
+    public class DepositProbabilityDictionary : SerializableDictionary<ItemData, float> {}
 }

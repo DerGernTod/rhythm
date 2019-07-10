@@ -1,13 +1,15 @@
 ﻿using System;
 using Rhythm;
 using Rhythm.Commands;
-using Services;
+using Rhythm.Services;
+using Rhythm.Songs;
 using UnityEngine;
 using Utils;
 
 namespace Units {
+	[RequireComponent(typeof(BoxCollider2D))]
 	public class Unit : MonoBehaviour {
-		private static int _ids;
+		private static int ids;
 		private int _unitId;
 		private string _name;
 		private int _health;
@@ -26,15 +28,17 @@ namespace Units {
 			_updateFunc = Constants.Noop;
 		}
 
+		private void Start() {
+		}
+
 		public void Initialize(UnitData unitData) {
 			_name = unitData.name;
 			_health = unitData.Health;
 			MovementSpeed = unitData.MovementSpeed;
 			_prefab = unitData.Prefab;
-			_unitId = _ids++;
+			_unitId = ids++;
 			_commandData = unitData.CommandData;
-			GameObject visuals = Instantiate(_prefab);
-			visuals.transform.parent = transform;
+			GameObject visuals = Instantiate(_prefab, transform);
 			visuals.transform.localPosition = Vector3.zero;
 			
 			// TODO: handle unitData.WeaponData
@@ -43,14 +47,15 @@ namespace Units {
 			_updates = new Action[_commandData.Length];
 			for (int i = 0; i < _commandData.Length; i++) {
 				CommandData commandData = _commandData[i];
-				string songName = commandData.Song;
-				_executions[i] = (quality, streakLenght) =>
-					commandData.SongCommandExecuted(quality, streakLenght, this);
-				_finishes[i] = () => commandData.SongCommandExecutionFinished(this);
-				_updates[i] = () => commandData.SongCommandUpdate(this);
-				ServiceLocator.Get<SongService>().Get(songName).CommandExecuted += _executions[i];
-				ServiceLocator.Get<SongService>().Get(songName).CommandExecutionFinished += _finishes[i];
-				ServiceLocator.Get<SongService>().Get(songName).CommandExecutionUpdate += _updates[i];
+				string songName = commandData.song.name;
+				_executions[i] = (quality, streakLength) =>
+					commandData.executed?.Invoke(quality, streakLength, this);
+				_finishes[i] = () => commandData.executionFinished?.Invoke(this);
+				_updates[i] = () => commandData.update?.Invoke(this);
+				Song song = ServiceLocator.Get<SongService>().Get(songName);
+				song.CommandExecuted += _executions[i];
+				song.CommandExecutionFinished += _finishes[i];
+				song.CommandExecutionUpdate += _updates[i];
 			}
 			
 			ServiceLocator.Get<BeatInputService>().OnBeatLost += OnBeatLost;
@@ -64,10 +69,11 @@ namespace Units {
 		private void OnDestroy() {
 			for (int i = 0; i < _commandData.Length; i++) {
 				CommandData commandData = _commandData[i];
-				string songName = commandData.Song;
-				ServiceLocator.Get<SongService>().Get(songName).CommandExecuted -= _executions[i];
-				ServiceLocator.Get<SongService>().Get(songName).CommandExecutionFinished -= _finishes[i];
-				ServiceLocator.Get<SongService>().Get(songName).CommandExecutionUpdate -= _updates[i];
+				string songName = commandData.song.name;
+				Song song = ServiceLocator.Get<SongService>().Get(songName);
+				song.CommandExecuted -= _executions[i];
+				song.CommandExecutionFinished -= _finishes[i];
+				song.CommandExecutionUpdate -= _updates[i];
 			}
 			ServiceLocator.Get<BeatInputService>().OnBeatLost -= OnBeatLost;
 			ServiceLocator.Get<BeatInputService>().OnExecutionFinished -= OnExecutionFinished;
