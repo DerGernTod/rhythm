@@ -1,6 +1,6 @@
 ﻿using Rhythm.Services;
+using Rhythm.Utils;
 using UnityEngine;
-using Utils;
 
 namespace Rhythm.Managers {
     public class DrumsManager : MonoBehaviour {

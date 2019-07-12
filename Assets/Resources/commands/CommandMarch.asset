@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bc8f051385746e2bf34d24ca6056207, type: 3}
+  m_Name: CommandMarch
+  m_EditorClassIdentifier: 
+  song: {fileID: 11400000, guid: 5826eeba85f616a449332a45a0567117, type: 2}
+  commandProviderPrefab: {fileID: 8816270758182768453, guid: 5b514f604cf394849babe96e08d18c1f,
+    type: 3}

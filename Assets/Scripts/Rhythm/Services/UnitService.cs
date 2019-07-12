@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Units;
+using Rhythm.Data;
+using Rhythm.Units;
+using Rhythm.Utils;
 using UnityEngine;
-using Utils;
 
 namespace Rhythm.Services {
 	public class UnitService : IService {

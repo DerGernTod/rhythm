@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
 using Rhythm.Services;
+using Rhythm.Utils;
 using UnityEngine;
 using UnityEngine.UI;
-using Utils;
 
 namespace Rhythm.Managers {
 	public class BeatManager : MonoBehaviour {

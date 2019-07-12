@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rhythm.Songs;
+using Rhythm.Utils;
 using UnityEngine;
-using Utils;
 
 namespace Rhythm.Services {
     [Serializable]

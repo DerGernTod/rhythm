@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Rhythm.Songs;
+using Rhythm.Utils;
 using UnityEngine;
-using Utils;
 
 namespace Rhythm.Services {
     [Serializable]

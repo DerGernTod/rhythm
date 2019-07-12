@@ -1,7 +1,7 @@
 ﻿using System;
+using Rhythm.Utils;
 using UnityEngine;
 using UnityEngine.Serialization;
-using Utils;
 
 namespace Rhythm.Services {
     [RequireComponent(typeof(AudioSource))]
