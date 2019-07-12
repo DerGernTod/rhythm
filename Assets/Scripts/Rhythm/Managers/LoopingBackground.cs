@@ -23,7 +23,7 @@ namespace Rhythm.Managers {
 				spriteRenderer.sprite = _levelData.backgroundSprite;
 				Transform transform1 = spriteRenderer.transform;
 				transform1.parent = transform;
-				transform1.localPosition = Vector3.down * BACKGROUND_DISTANCE * (i - 1);
+				transform1.localPosition = BACKGROUND_DISTANCE * (i - 1) * Vector3.down;
 				_backgrounds[i] = spriteRenderer;
 				_backgroundWasVisible[i] = spriteRenderer.isVisible;
 			}

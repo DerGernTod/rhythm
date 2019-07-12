@@ -34,8 +34,8 @@ namespace Rhythm.Services {
             throw new Exception("Unknown song with name " + songName + "!");
         }
 
-        public List<Song> CheckSongs(float[] beats) {
-            return _songs.Values.Where(song => song.Contains(beats)).ToList();
+        public List<Song> CheckSongs(float[] notes) {
+            return _songs.Values.Where(song => song.Contains(notes)).ToList();
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Rhythm.Utils {
     public class ServiceDictionary: SerializableDictionary<Type, IService> {}
 
     [Serializable]
-    public class QualityClipDictionary : SerializableDictionary<BeatQuality, AudioClip> {}
+    public class QualityClipDictionary : SerializableDictionary<NoteQuality, AudioClip> {}
 
     [Serializable]
     public class UnitDataDictionary: SerializableDictionary<string, UnitData> {}

@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Utils.Editor {
 
     [CustomPropertyDrawer(typeof(QualityClipDictionary))]
-    public class QualityClipDictionaryDrawer : DictionaryDrawer<QualityClipDictionary, BeatQuality, AudioClip> {}
+    public class QualityClipDictionaryDrawer : DictionaryDrawer<QualityClipDictionary, NoteQuality, AudioClip> {}
     [CustomPropertyDrawer(typeof(ServiceDictionary))]
     public class ServiceDictionaryDrawer : DictionaryDrawer<ServiceDictionary, Type, IService> {}
     [CustomPropertyDrawer(typeof(UnitDataDictionary))]

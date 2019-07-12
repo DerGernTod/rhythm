@@ -7,7 +7,7 @@ namespace Rhythm.Commands {
         public override void ExecutionFinished(Unit unit) {
         }
 
-        public override void Executed(BeatQuality beatQuality, int streak, Unit unit) {
+        public override void Executed(NoteQuality noteQuality, int streak, Unit unit) {
         }
 
         public override void CommandUpdate(Unit unit) {

@@ -10,7 +10,7 @@ using UnityEngine.Serialization;
 namespace Rhythm.Data {
     
     [Serializable] public class ExecutionFinishedEvent : UnityEvent<Unit> {}
-    [Serializable] public class ExecutedEvent : UnityEvent<BeatQuality, int, Unit> {}
+    [Serializable] public class ExecutedEvent : UnityEvent<NoteQuality, int, Unit> {}
     [Serializable] public class UpdateEvent : UnityEvent<Unit> {}
     
     [CreateAssetMenu(fileName = "CommandData", menuName = "Rhythm/CommandData", order = 2)]

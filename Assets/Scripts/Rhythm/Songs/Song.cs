@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Rhythm.Songs {
     public class Song {
-        public event Action<BeatQuality, int> CommandExecuted;
+        public event Action<NoteQuality, int> CommandExecuted;
         public event Action CommandExecutionFinished;
         public event Action CommandExecutionUpdate;
         private readonly float[] _beats;
@@ -38,8 +38,8 @@ namespace Rhythm.Songs {
             return beats.Length == _beats.Length && Contains(beats);
         }
 
-        public void ExecuteCommand(BeatQuality beatQuality, int streakLength) {
-            CommandExecuted?.Invoke(beatQuality, streakLength);
+        public void ExecuteCommand(NoteQuality noteQuality, int streakLength) {
+            CommandExecuted?.Invoke(noteQuality, streakLength);
         }
 
         public void FinishCommandExecution() {

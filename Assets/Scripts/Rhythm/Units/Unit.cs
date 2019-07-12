@@ -7,6 +7,7 @@ using Rhythm.Utils;
 using UnityEngine;
 
 namespace Rhythm.Units {
+	// [RequireComponent(typeof(Collider2D))]
 	public class Unit : MonoBehaviour {
 		private static int ids;
 		
@@ -14,13 +15,13 @@ namespace Rhythm.Units {
 		private string _name;
 		private int _health;
 
+		public int Owner { get; private set; }
 		public float MovementSpeed { get; private set;}
 
-		private GameObject _prefab;
 		private Action _updateFunc;
 		private CommandData[] _commandData;
 
-		private Action<BeatQuality, int>[] _executions;
+		private Action<NoteQuality, int>[] _executions;
 		private Action[] _finishes;
 		private Action[] _updates;
 		
@@ -28,21 +29,16 @@ namespace Rhythm.Units {
 			_updateFunc = Constants.Noop;
 		}
 
-		private void Start() {
-		}
-
 		public void Initialize(UnitData unitData) {
 			_name = unitData.name;
 			_health = unitData.health;
 			MovementSpeed = unitData.movementSpeed;
-			_prefab = unitData.prefab;
+			Owner = Constants.PLAYER_ID_PLAYER;
 			_unitId = ids++;
 			_commandData = unitData.commandData;
-			GameObject visuals = Instantiate(_prefab, transform);
-			visuals.transform.localPosition = Vector3.zero;
 			
 			// TODO: handle unitData.WeaponData
-			_executions = new Action<BeatQuality, int>[_commandData.Length];
+			_executions = new Action<NoteQuality, int>[_commandData.Length];
 			_finishes = new Action[_commandData.Length];
 			_updates = new Action[_commandData.Length];
 			for (int i = 0; i < _commandData.Length; i++) {

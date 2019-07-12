@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 186df8052ee444bebf2a8b73a2d18647, type: 3}
   m_Name: Drummer
   m_EditorClassIdentifier: 
-  Health: 1
-  MovementSpeed: 1
-  WeaponData: {fileID: 0}
-  Prefab: {fileID: 1480932315587872, guid: 23cb61a4df26b5b44a185861b7377de0, type: 3}
-  CommandData:
+  health: 1
+  movementSpeed: 1
+  weaponData: {fileID: 0}
+  prefab: {fileID: 7587222798511506495, guid: 23cb61a4df26b5b44a185861b7377de0, type: 3}
+  commandData:
   - {fileID: 11400000, guid: 74a7f7714674ccf4fa6d807efbc42138, type: 2}

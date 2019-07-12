@@ -8,7 +8,7 @@ namespace Rhythm.Commands {
             // if target still has health, keep it
         }
 
-        public override void Executed(BeatQuality beatQuality, int streak, Unit unit) {
+        public override void Executed(NoteQuality noteQuality, int streak, Unit unit) {
             // do nothing if current target still has health
             // otherwise search deposits on screen (closest first) and pick a target
             // pick targets depending on unit equipment (tier, type)

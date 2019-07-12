@@ -1,5 +1,5 @@
 ﻿namespace Rhythm.Services {
-    public enum BeatQuality {
+    public enum NoteQuality {
         Miss,
         Bad,
         Good,

@@ -35,8 +35,8 @@ namespace Rhythm.Services {
 				                    "Create a corresponding UnitData first.");
 			}
 
+			Unit unit = GameObject.Instantiate(unitData.prefab);
 			GameObject g = new GameObject(name);
-			Unit unit = g.AddComponent<Unit>();
 			_createdUnits.Add(unit.GetInstanceID(), unit);
 			UnitCreated?.Invoke(unit);
 			unit.Initialize(unitData);
