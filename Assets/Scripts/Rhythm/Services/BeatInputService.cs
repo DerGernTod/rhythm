@@ -74,7 +74,7 @@ namespace Rhythm.Services {
             _update(deltaTime);
         }
 
-        public void BeatInputUpdate(float deltaTime) {
+        private void BeatInputUpdate(float deltaTime) {
             _currentCommandUpdate();
             _currentBeatRunTime = AudioSettings.dspTime - _currentBeatStartTime;
             bool mouseButtonDown = Input.GetMouseButtonDown(0);
