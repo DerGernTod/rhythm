@@ -19,8 +19,6 @@ namespace Rhythm.Managers {
 #pragma warning restore 0649
 		private class BeatImageDictionary : SerializableDictionary<NoteQuality, Image> {}
 		
-		private double _startBeat;
-		private int _prevCurBeat;
 		private BeatImageDictionary _beatHitImages;
 		private Vector2 _latestTouchPosition;
 		private Action updateClickLocation;
@@ -41,11 +39,13 @@ namespace Rhythm.Managers {
 		};
 		
 		private AudioService _audioService;
-		
+		private BeatInputService _beatInputService;
+		private GameStateService _gameStateService;
+
 		// Use this for initialization
 		private void Start () {
-			_startBeat = AudioSettings.dspTime;
 			_audioService = ServiceLocator.Get<AudioService>();
+			_beatInputService = ServiceLocator.Get<BeatInputService>();
 			_beatHitImages = new BeatImageDictionary {
 				{ NoteQuality.Good, hitGood },
 				{ NoteQuality.Start, hitGood },
@@ -55,8 +55,7 @@ namespace Rhythm.Managers {
 			Action<object> overlayFade = CreateFadeDelegate(beatBlendOverlayImage);
 			_overlayFadeHashtable["onupdate"] = overlayFade;
 			overlayFade(0f);
-			UpdateBeatsPerSecond(BeatInputService.NOTE_TIME);
-			ServiceLocator.Get<BeatInputService>().NoteHit += NoteHit;
+			ServiceLocator.Get<BeatInputService>().OnNoteHit += OnNoteHit;
 			updateClickLocation = () => {
 				if (Input.touches.Length > 0) {
 					_latestTouchPosition = Input.touches[0].position;
@@ -65,24 +64,29 @@ namespace Rhythm.Managers {
 					_latestTouchPosition = Input.mousePosition;
 				}
 			};
-			_update = IngameUpdate;
-			ServiceLocator.Get<GameStateService>().GameFinished += OnGameFinished;
+			_gameStateService = ServiceLocator.Get<GameStateService>();
+			_gameStateService.GameFinished += OnGameFinished;
+			_gameStateService.GameStarted += OnGameStarted;
 		}
 
+		private void OnGameStarted() {
+			_update = Constants.Noop;
+			_beatInputService.OnMetronomeTick += OnMetronomeTick;
+		}
+		
 		private void OnGameFinished() {
 			_update = Constants.Noop;
+			_beatInputService.OnMetronomeTick -= OnMetronomeTick;
 		}
 
 		private void OnDestroy() {
-			ServiceLocator.Get<BeatInputService>().NoteHit -= NoteHit;
-			ServiceLocator.Get<GameStateService>().GameFinished -= OnGameFinished;
+			_beatInputService.OnNoteHit -= OnNoteHit;
+			_gameStateService.GameFinished -= OnGameFinished;
+			_gameStateService.GameStarted -= OnGameStarted;
 		}
 
-		private void NoteHit(NoteQuality quality, float diff, int streak) {
+		private void OnNoteHit(NoteQuality quality, float diff, int streak) {
 			updateClickLocation();
-			if (quality == NoteQuality.Start && streak == 0) {
-				UpdateBeatsPerSecond(BeatInputService.NOTE_TIME);
-			}
 
 			Image hitImage;
 			switch (quality) {
@@ -101,7 +105,7 @@ namespace Rhythm.Managers {
 
 			_beatHitFadeHashtable["onupdate"] = CreateFadeDelegate(hitImage);
 			GameObject hitImageGo = hitImage.gameObject;
-			hitImageGo.transform.eulerAngles = Vector3.back * UnityEngine.Random.value * 90;
+			hitImageGo.transform.eulerAngles = UnityEngine.Random.value * 90 * Vector3.back;
 			Vector2 center = new Vector2(Screen.width / 2f, Screen.height / 2f);
 			hitImageGo.transform.position = Vector2.Lerp(center, _latestTouchPosition, .5f);
 			iTween.PunchScale(hitImageGo, _punchScaleHashtable);
@@ -113,22 +117,9 @@ namespace Rhythm.Managers {
 			_update();
 		}
 
-		private void IngameUpdate() {
-			int curBeat = (int) Math.Floor((AudioSettings.dspTime - _startBeat) / BeatInputService.NOTE_TIME);
-			if (!(curBeat > _prevCurBeat + BeatInputService.NOTE_TIME)) return;
-			TriggerBeat(curBeat);
-		}
-
-		private void TriggerBeat(int prevBeat) {
+		private void OnMetronomeTick() {
 			_audioService.PlayOneShot(clipBeat);
 			iTween.ValueTo(gameObject, _overlayFadeHashtable);
-			_prevCurBeat = prevBeat;
-		}
-
-		private void UpdateBeatsPerSecond(float bps) {
-			_startBeat = AudioSettings.dspTime - BeatInputService.NOTE_TIME;
-			_overlayFadeHashtable["time"] = bps * .9f;
-			TriggerBeat((int) Math.Floor((AudioSettings.dspTime - _startBeat) / BeatInputService.NOTE_TIME));
 		}
 		
 		private static Action<object> CreateFadeDelegate(Graphic target) {

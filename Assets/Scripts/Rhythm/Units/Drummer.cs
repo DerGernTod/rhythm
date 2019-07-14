@@ -11,7 +11,7 @@ namespace Rhythm.Units {
 
 		private void Awake() {
 			_animator = GetComponent<Animator>();
-			ServiceLocator.Get<BeatInputService>().NoteHit += OnNoteHit;
+			ServiceLocator.Get<BeatInputService>().OnNoteHit += OnNoteHit;
 		}
 
 		private void OnNoteHit(NoteQuality arg1, float diff, int streak) {
@@ -20,7 +20,7 @@ namespace Rhythm.Units {
 		}
 
 		private void OnDestroy() {
-			ServiceLocator.Get<BeatInputService>().NoteHit -= OnNoteHit;
+			ServiceLocator.Get<BeatInputService>().OnNoteHit -= OnNoteHit;
 		}
 	}
 }

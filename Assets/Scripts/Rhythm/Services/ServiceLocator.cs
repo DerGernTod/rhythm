@@ -1,6 +1,7 @@
 ﻿using System;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
 namespace Rhythm.Services {
@@ -31,9 +32,19 @@ namespace Rhythm.Services {
             }
         }
 
+        private void Start() {
+            SceneManager.LoadScene("Intro");
+        }
+
         private void Update() {
             foreach (IUpdateableService service in updateableServices) {
                 service.Update(Time.deltaTime);
+            }
+        }
+
+        private void FixedUpdate() {
+            foreach (IUpdateableService service in updateableServices) {
+                service.FixedUpdate();
             }
         }
 

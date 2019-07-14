@@ -9,19 +9,26 @@ namespace Rhythm.Services {
     public class BeatInputService : IUpdateableService {
         public event Action OnBeatLost;
         public event Action OnStreakLost;
-        public event Action<NoteQuality, float, int> NoteHit;
+        public event Action<NoteQuality, float, int> OnNoteHit;
         public event Action<Song> OnExecutionStarted;
         public event Action<Song> OnExecutionFinished;
+        public event Action OnMetronomeTick;
         public const float NOTE_TIME = .75f;
         public const float HALF_NOTE_TIME = NOTE_TIME / 2f;
-        public const float FAIL_TOLERANCE = .20f;
+        public const float QUARTER_NOTE_TIME = NOTE_TIME / 4f;
+        public const float FAIL_TOLERANCE = .10f;
         private const float MAX_WAIT_FOR_SECOND_BEAT = 8 * NOTE_TIME + FAIL_TOLERANCE;
+        private const float INDICATOR_TOLERANCE = .02f;
+        private const float INDICATOR_WAIT_TIME = HALF_NOTE_TIME - INDICATOR_TOLERANCE;
 
-        private double _currentBeatStartTime;
-        private double _lastNoteTime;
+        private double _lastMetronomeTickTime;
+        private double _lastMetronomeTickAbsolute;
+        private double _currentBeatStartTimeAbs;
+        private double _lastNoteTimeAbs;
         private float _givenBeat;
         private bool _hasBeat;
         private bool _beatStarterEnabled = true;
+        private bool _tickMetronome = true;
         private double _currentBeatRunTime;
         private int _numSuccessfulBeats;
         private SongService _songService;
@@ -31,42 +38,48 @@ namespace Rhythm.Services {
         private Song _currentSong;
         private Action _currentCommandUpdate = Constants.Noop;
         private Action<float> _update = Constants.NoopFloat;
+        private Action _fixedUpdate = Constants.Noop;
+        private Coroutine _metronomeCoroutine;
         public BeatInputService(MonoBehaviour coroutineProvider) {
             _coroutineProvider = coroutineProvider;
         }
         
         public void Initialize() {
             #if UNITY_EDITOR
-            NoteHit += (quality, diff, streak) => Debug.Log("Beat hit: " + quality + " - diff: " + diff + " - streak: " + streak);
+            OnNoteHit += (quality, diff, streak) => Debug.Log("Beat hit: " + quality + " - diff: " + diff + " - streak: " + streak);
             OnBeatLost += () => Debug.Log("Beat lost...");
             OnStreakLost += () => Debug.Log("Streak lost...");
             OnExecutionStarted += song => Debug.Log("Executing song " + song.Name);
             OnExecutionFinished += song => Debug.Log("Finished executing song " + song.Name);
             #endif
-            _update = BeatInputUpdate;
+            // _update = BeatInputUpdate;
         }
 
         public void PostInitialize() {
             _songService = ServiceLocator.Get<SongService>();
             _gameStateService = ServiceLocator.Get<GameStateService>();
-            _currentBeatStartTime = AudioSettings.dspTime;
+            _currentBeatStartTimeAbs = (float) AudioSettings.dspTime;
             _currentBeatRunTime = 0;
-            _gameStateService.GameFinished += OnGameFinished;
+            _gameStateService.GameFinished += Cleanup;
             _gameStateService.GameStarted += OnGameStarted;
         }
 
         private void OnGameStarted() {
             _update = BeatInputUpdate;
+            _fixedUpdate = MetronomeTickUpdate;
         }
-        private void OnGameFinished() {
+        private void Cleanup() {
+            _currentCommandUpdate = Constants.Noop;
             _update = Constants.NoopFloat;
+            _fixedUpdate = Constants.Noop;
+            _currentNotes.Clear();
+            _coroutineProvider.StopAllCoroutines();
+            _currentBeatRunTime = 0;
         }
 
         public void Destroy() {
-            _currentNotes.Clear();
-            _currentCommandUpdate = Constants.Noop;
-            _update = Constants.NoopFloat;
-            _gameStateService.GameFinished -= OnGameFinished;
+            Cleanup();
+            _gameStateService.GameFinished -= Cleanup;
             _gameStateService.GameStarted -= OnGameStarted;
         }
 
@@ -74,11 +87,30 @@ namespace Rhythm.Services {
             _update(deltaTime);
         }
 
+        public void FixedUpdate() {
+            _fixedUpdate();
+        }
+
+        private void MetronomeTickUpdate() {
+// metronome should kick in a tiny bit earlier than you'd expect
+            if (AudioSettings.dspTime - _lastMetronomeTickTime >= INDICATOR_WAIT_TIME
+                && AudioSettings.dspTime - _lastMetronomeTickAbsolute >= QUARTER_NOTE_TIME) {
+                if (_tickMetronome) {
+                    OnMetronomeTick?.Invoke();
+                }
+
+                _tickMetronome = !_tickMetronome;
+                _lastMetronomeTickTime = _currentBeatStartTimeAbs + RoundToBeatTime((float) AudioSettings.dspTime);
+                _lastMetronomeTickAbsolute = AudioSettings.dspTime;
+            }
+        }
+
         private void BeatInputUpdate(float deltaTime) {
             _currentCommandUpdate();
-            _currentBeatRunTime = AudioSettings.dspTime - _currentBeatStartTime;
+            _currentBeatRunTime = AudioSettings.dspTime - _currentBeatStartTimeAbs;
+            
             bool mouseButtonDown = Input.GetMouseButtonDown(0);
-            // break the streak in case the current beat was not successfully started after a full tact (MaxWaitForSecondTact)
+            // break the streak in case the current beat was not successfully started after a full tact (MaxWaitForSecondBeat)
             // break the streak if a drum was hit while a song is executing
             if (_hasBeat && _currentBeatRunTime >= MAX_WAIT_FOR_SECOND_BEAT && _beatStarterEnabled
                 || mouseButtonDown && _currentSong != null) {
@@ -98,8 +130,8 @@ namespace Rhythm.Services {
             }
 
             // break the beat if there was no hit after the max beat time
-            if (_hasBeat
-                && _lastNoteTime > AudioSettings.dspTime + FAIL_TOLERANCE
+            if (!mouseButtonDown && _hasBeat
+                && AudioSettings.dspTime > _lastNoteTimeAbs + NOTE_TIME + FAIL_TOLERANCE
                 && _currentBeatRunTime < 4 * NOTE_TIME + FAIL_TOLERANCE) {
                 HandleBeatLost();
                 return;
@@ -140,7 +172,7 @@ namespace Rhythm.Services {
         private void HandleNote() {
             NoteQuality hitNoteQuality;
             float noteTimeDiff = 0;
-            _lastNoteTime = RoundToBeatTime((float) AudioSettings.dspTime);
+            _lastNoteTimeAbs = RoundToMetronome(AudioSettings.dspTime);
             if (!_hasBeat || _currentBeatRunTime >= 8 * NOTE_TIME - FAIL_TOLERANCE) {
                 StartBeat();
                 hitNoteQuality = NoteQuality.Start;
@@ -161,7 +193,7 @@ namespace Rhythm.Services {
                 hitNoteQuality = NoteQuality.Miss;
                 Debug.Log("No songs detected with that beat! Current beat was " + string.Join("-", _currentNotes));
             }
-            NoteHit?.Invoke(hitNoteQuality, noteTimeDiff, _numSuccessfulBeats);
+            OnNoteHit?.Invoke(hitNoteQuality, noteTimeDiff, _numSuccessfulBeats);
             if (hitNoteQuality == NoteQuality.Miss) {
                 HandleBeatLost();
             }
@@ -186,28 +218,33 @@ namespace Rhythm.Services {
         }
 
         private float CalcBeatDiff() {
-            float currentBeatRunTimeFloat = (float) _currentBeatRunTime;
-            float targetBeatTime = RoundToBeatTime(currentBeatRunTimeFloat);
-            float beatTimeDiff = targetBeatTime - currentBeatRunTimeFloat;
-            _currentNotes.Add(targetBeatTime / NOTE_TIME);
-            return beatTimeDiff;
+            double currentBeatRunTimeFloat = _currentBeatRunTime;
+            double targetBeatTime = RoundToMetronome(currentBeatRunTimeFloat);
+            double beatTimeDiff = targetBeatTime - currentBeatRunTimeFloat;
+            _currentNotes.Add((float)targetBeatTime / NOTE_TIME);
+            return (float) beatTimeDiff;
         }
 
         private float RoundToBeatTime(float time) {
-            int currentBeatNum = Mathf.RoundToInt(time / HALF_NOTE_TIME);
+            int currentBeatNum = Mathf.RoundToInt((float)(time - _currentBeatStartTimeAbs) / HALF_NOTE_TIME);
             return currentBeatNum * HALF_NOTE_TIME;
-        } 
+        }
+
+        private double RoundToMetronome(double time) {
+            int metronomeTick = Mathf.RoundToInt((float)(time - _lastMetronomeTickTime) / HALF_NOTE_TIME);
+            return _lastMetronomeTickTime + metronomeTick * HALF_NOTE_TIME;
+        }
 
         private void StartBeat() {
-            
-            _currentBeatStartTime = RoundToBeatTime((float) AudioSettings.dspTime);
+            _currentBeatStartTimeAbs = RoundToMetronome(AudioSettings.dspTime);
             _currentBeatRunTime = 0;
             _currentNotes.Add(0);
+            Debug.Log("Starting beat at " + _currentBeatStartTimeAbs);
         }
 
         private void ExecuteSong(NoteQuality hitNoteQuality, float beatTimeDiff, Song matchingSong) {
             _numSuccessfulBeats++;
-            NoteHit?.Invoke(hitNoteQuality, beatTimeDiff, _numSuccessfulBeats);
+            OnNoteHit?.Invoke(hitNoteQuality, beatTimeDiff, _numSuccessfulBeats);
             _currentSong = matchingSong;
             _currentSong.ExecuteCommand(hitNoteQuality, _numSuccessfulBeats);
             OnExecutionStarted?.Invoke(_currentSong);

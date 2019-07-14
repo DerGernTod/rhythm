@@ -1,10 +1,16 @@
 using System;
+using System.Collections.Generic;
 using Rhythm.UI;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Rhythm.Managers {
     public class ComicManager : MonoBehaviour {
+#pragma warning disable 0649
+        [SerializeField] private SerializableEvents.UnityEventInt pageFinished;
+#pragma warning restore 0649
+        
         private ComicPage[] _pages;
         private int _pageIndex;
         private Action _update;
@@ -24,7 +30,10 @@ namespace Rhythm.Managers {
             ComicPage curPage = _pages[_pageIndex++];
             curPage.Show();
             curPage.FadeInComplete += () => curPage.ShowNextPanel();
-            curPage.AllPanelsShowComplete += () => _update = HideCurrentPageOnTouch;
+            curPage.AllPanelsShowComplete += () => {
+                _update = _pageIndex == _pages.Length ? Constants.Noop : HideCurrentPageOnTouch;
+                pageFinished?.Invoke(_pageIndex - 1);
+            };
             _update = () => {
                 if (Input.GetMouseButtonDown(0)) {
                     curPage.ShowNextPanel();

@@ -4,11 +4,12 @@ using Rhythm.Services;
 using Rhythm.Units;
 using UnityEngine;
 
-#pragma warning disable 0649
 namespace State {
     public class IngameState : MonoBehaviour {
         
+#pragma warning disable 0649
         [SerializeField] private LevelData levelData;
+#pragma warning restore 0649
         private void Start() {
             LoopingBackground background = new GameObject("Looping Background").AddComponent<LoopingBackground>();
             background.transform.Translate(Vector3.forward * 1);
