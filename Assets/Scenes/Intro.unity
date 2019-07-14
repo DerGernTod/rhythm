@@ -293,6 +293,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2053619346 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2115244568244896996, guid: 9369da4d09ef42e40a3d5a67d9d963c4,
+    type: 3}
+  m_PrefabInstance: {fileID: 2115244568744480439}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &2115244568744480439
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -410,5 +422,39 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2115244567307425248, guid: 9369da4d09ef42e40a3d5a67d9d963c4,
+        type: 3}
+      propertyPath: moodSprites.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2115244567307425248, guid: 9369da4d09ef42e40a3d5a67d9d963c4,
+        type: 3}
+      propertyPath: mood
+      value: 
+      objectReference: {fileID: 2053619346}
+    - target: {fileID: 2115244567307425248, guid: 9369da4d09ef42e40a3d5a67d9d963c4,
+        type: 3}
+      propertyPath: moodSprites.Array.data[0]
+      value: 
+      objectReference: {fileID: 21300000, guid: 560dc4d18a2dc0b47bbc1acd7608e8b3,
+        type: 3}
+    - target: {fileID: 2115244567307425248, guid: 9369da4d09ef42e40a3d5a67d9d963c4,
+        type: 3}
+      propertyPath: moodSprites.Array.data[1]
+      value: 
+      objectReference: {fileID: 21300000, guid: 42be745189128ce4292a61f36f76b8a1,
+        type: 3}
+    - target: {fileID: 2115244567307425248, guid: 9369da4d09ef42e40a3d5a67d9d963c4,
+        type: 3}
+      propertyPath: moodSprites.Array.data[2]
+      value: 
+      objectReference: {fileID: 21300000, guid: 23ec015605e53b943ad17dce0f5682b3,
+        type: 3}
+    - target: {fileID: 2115244567307425248, guid: 9369da4d09ef42e40a3d5a67d9d963c4,
+        type: 3}
+      propertyPath: moodSprites.Array.data[3]
+      value: 
+      objectReference: {fileID: 21300000, guid: 186c3a07cf9eceb4ca1dc3b1cd4ee5f9,
+        type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9369da4d09ef42e40a3d5a67d9d963c4, type: 3}

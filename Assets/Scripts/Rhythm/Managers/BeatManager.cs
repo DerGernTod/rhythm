@@ -55,7 +55,7 @@ namespace Rhythm.Managers {
 			Action<object> overlayFade = CreateFadeDelegate(beatBlendOverlayImage);
 			_overlayFadeHashtable["onupdate"] = overlayFade;
 			overlayFade(0f);
-			ServiceLocator.Get<BeatInputService>().OnNoteHit += OnNoteHit;
+			_beatInputService.OnNoteHit += OnNoteHit;
 			updateClickLocation = () => {
 				if (Input.touches.Length > 0) {
 					_latestTouchPosition = Input.touches[0].position;

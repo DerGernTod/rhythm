@@ -11,6 +11,7 @@ namespace Rhythm.Services {
         public event Action OnStreakLost;
         public event Action<NoteQuality, float, int> OnNoteHit;
         public event Action<Song> OnExecutionStarted;
+        public event Action<Song> OnExecutionAborted;
         public event Action<Song> OnExecutionFinished;
         public event Action OnMetronomeTick;
         public const float NOTE_TIME = .75f;
@@ -100,7 +101,7 @@ namespace Rhythm.Services {
                 }
 
                 _tickMetronome = !_tickMetronome;
-                _lastMetronomeTickTime = _currentBeatStartTimeAbs + RoundToBeatTime((float) AudioSettings.dspTime);
+                _lastMetronomeTickTime = RoundToMetronome(AudioSettings.dspTime);
                 _lastMetronomeTickAbsolute = AudioSettings.dspTime;
             }
         }
@@ -125,7 +126,7 @@ namespace Rhythm.Services {
                     _beatStarterEnabled,
                     mouseButtonDown,
                     _currentSong == null);
-                HandleBeatLost(true);
+                HandleBeatLost();
                 return;
             }
 
@@ -143,12 +144,14 @@ namespace Rhythm.Services {
         }
 
         private void HandleBeatLost(bool justLoseStreak = false) {
-            if (justLoseStreak) {
-                OnStreakLost?.Invoke();
-            } else {
+            if (!justLoseStreak) {
                 OnBeatLost?.Invoke();
             }
-
+            OnStreakLost?.Invoke();
+            if (_currentSong != null) {
+                OnExecutionAborted?.Invoke(_currentSong);
+                _currentSong = null;
+            }
             _numSuccessfulBeats = 0;
             _hasBeat = false;
             ResetBeatAfterSeconds(1);
@@ -218,15 +221,15 @@ namespace Rhythm.Services {
         }
 
         private float CalcBeatDiff() {
-            double currentBeatRunTimeFloat = _currentBeatRunTime;
-            double targetBeatTime = RoundToMetronome(currentBeatRunTimeFloat);
+            float currentBeatRunTimeFloat = (float)_currentBeatRunTime;
+            double targetBeatTime = RoundToBeatTime(currentBeatRunTimeFloat);
             double beatTimeDiff = targetBeatTime - currentBeatRunTimeFloat;
             _currentNotes.Add((float)targetBeatTime / NOTE_TIME);
             return (float) beatTimeDiff;
         }
 
         private float RoundToBeatTime(float time) {
-            int currentBeatNum = Mathf.RoundToInt((float)(time - _currentBeatStartTimeAbs) / HALF_NOTE_TIME);
+            int currentBeatNum = Mathf.RoundToInt(time / HALF_NOTE_TIME);
             return currentBeatNum * HALF_NOTE_TIME;
         }
 
