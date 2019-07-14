@@ -32,10 +32,15 @@ namespace Rhythm.Managers {
 			{ "from", 1f },
 			{ "to", 0 }
 		};
-
 		private readonly Hashtable _punchScaleHashtable = new Hashtable {
 			{ "amount", Vector3.one * .5f },
 			{ "time", BeatInputService.NOTE_TIME }
+		};
+		private readonly Hashtable _moveDownHashtable = new Hashtable {
+			{ "y", -500f },
+			{ "time", BeatInputService.NOTE_TIME * 2f},
+			{ "space", "world" },
+			{ "easetype", iTween.EaseType.easeInCirc }
 		};
 		
 		private AudioService _audioService;
@@ -56,6 +61,7 @@ namespace Rhythm.Managers {
 			_overlayFadeHashtable["onupdate"] = overlayFade;
 			overlayFade(0f);
 			_beatInputService.OnNoteHit += OnNoteHit;
+			_beatInputService.OnStreakLost += OnStreakLost;
 			updateClickLocation = () => {
 				if (Input.touches.Length > 0) {
 					_latestTouchPosition = Input.touches[0].position;
@@ -109,6 +115,18 @@ namespace Rhythm.Managers {
 			Vector2 center = new Vector2(Screen.width / 2f, Screen.height / 2f);
 			hitImageGo.transform.position = Vector2.Lerp(center, _latestTouchPosition, .5f);
 			iTween.PunchScale(hitImageGo, _punchScaleHashtable);
+			iTween.ValueTo(hitImageGo, _beatHitFadeHashtable);
+		}
+
+		private void OnStreakLost() {
+			Image hitImage = _beatHitImages[NoteQuality.Miss];
+			_beatHitFadeHashtable["onupdate"] = CreateFadeDelegate(hitImage);
+			GameObject hitImageGo = hitImage.gameObject;
+			iTween.Stop(hitImageGo);
+			Vector2 center = new Vector2(Screen.width / 2f, Screen.height * 3f / 4f);
+			hitImageGo.transform.eulerAngles = Vector3.back * 45f;
+			hitImageGo.transform.position = Vector2.Lerp(center, _latestTouchPosition, .5f);
+			iTween.MoveBy(hitImageGo, _moveDownHashtable);
 			iTween.ValueTo(hitImageGo, _beatHitFadeHashtable);
 		}
 

@@ -37,6 +37,7 @@ namespace Rhythm.Tutorial {
                 _beatInputService.OnStreakLost += OnStreakLost;
                 _beatInputService.OnExecutionStarted += OnExecutionStarted;
                 _beatInputService.OnExecutionFinished += OnExecutionFinished;
+                _beatInputService.OnExecutionAborted += OnExecutionFinished;
             }
         }
 
@@ -98,6 +99,7 @@ namespace Rhythm.Tutorial {
             _beatInputService.OnStreakLost -= OnStreakLost;
             _beatInputService.OnExecutionStarted -= OnExecutionStarted;
             _beatInputService.OnExecutionFinished -= OnExecutionFinished;
+            _beatInputService.OnExecutionAborted -= OnExecutionFinished;
         }
 
         private void PunchDrum() {
