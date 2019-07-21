@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
 using Rhythm.Services;
+using Rhythm.Songs;
 using Rhythm.Utils;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace Rhythm.Managers {
 	public class BeatManager : MonoBehaviour {
@@ -16,6 +18,8 @@ namespace Rhythm.Managers {
 		[SerializeField] private Image hitMiss;
 		[SerializeField] private Image hitNice;
 		[SerializeField] private Image hitGood;
+		[SerializeField] private Text songIndicator;
+
 #pragma warning restore 0649
 		private class BeatImageDictionary : SerializableDictionary<NoteQuality, Image> {}
 		
@@ -23,12 +27,17 @@ namespace Rhythm.Managers {
 		private Vector2 _latestTouchPosition;
 		private Action updateClickLocation;
 		private Action _update = Constants.Noop;
-		
+		private Vector3 _initialIndicatorPos;
+		private bool _isExecutingSong;
 		private readonly Hashtable _overlayFadeHashtable = new Hashtable {
 			{ "from", .5f },
 			{ "to", 0 }
 		};
 		private readonly Hashtable _beatHitFadeHashtable = new Hashtable {
+			{ "from", 1f },
+			{ "to", 0 }
+		};
+		private readonly Hashtable _songIndicatorFadeHashtable = new Hashtable {
 			{ "from", 1f },
 			{ "to", 0 }
 		};
@@ -62,6 +71,9 @@ namespace Rhythm.Managers {
 			overlayFade(0f);
 			_beatInputService.OnNoteHit += OnNoteHit;
 			_beatInputService.OnStreakLost += OnStreakLost;
+			_beatInputService.OnAfterExecutionStarted += OnAfterExecutionStarted;
+			_beatInputService.OnExecutionAborted += OnExecutionAborted;
+			_beatInputService.OnAfterExecutionFinished += OnAfterExecutionFinished;
 			updateClickLocation = () => {
 				if (Input.touches.Length > 0) {
 					_latestTouchPosition = Input.touches[0].position;
@@ -73,6 +85,45 @@ namespace Rhythm.Managers {
 			_gameStateService = ServiceLocator.Get<GameStateService>();
 			_gameStateService.GameFinished += OnGameFinished;
 			_gameStateService.GameStarted += OnGameStarted;
+			_initialIndicatorPos = songIndicator.transform.position;
+		}
+
+		private void OnExecutionAborted(Song obj) {
+			GameObject songTextGo = songIndicator.gameObject;
+			_songIndicatorFadeHashtable["onupdate"] = CreateFadeDelegate(songIndicator);
+			songTextGo.transform.position = _initialIndicatorPos;
+			iTween.Stop(songTextGo);
+			iTween.MoveBy(songTextGo, _moveDownHashtable);
+			iTween.ValueTo(songTextGo, _songIndicatorFadeHashtable);
+			_beatInputService.OnMetronomeTick -= OnMetronomeTickSongIndicator;
+			_isExecutingSong = false;
+		}
+
+		private void OnAfterExecutionStarted(Song obj) {
+			songIndicator.text = obj.Name.ToUpper();
+			_beatInputService.OnMetronomeTick += OnMetronomeTickSongIndicator;
+			_isExecutingSong = true;
+		}
+
+		private void OnMetronomeTickSongIndicator() {
+			GameObject songTextGo = songIndicator.gameObject;
+			songTextGo.transform.position = _initialIndicatorPos;
+			Color c = songIndicator.color;
+			c.a = 1;
+			songIndicator.color = c;
+			iTween.Stop(songTextGo);
+			iTween.PunchPosition(songTextGo, Vector3.up * Screen.height / 20f, BeatInputService.NOTE_TIME * .9f);
+		}
+
+		private void OnAfterExecutionFinished(Song obj) {
+			GameObject songTextGo = songIndicator.gameObject;
+			_songIndicatorFadeHashtable["onupdate"] = CreateFadeDelegate(songIndicator);
+			songTextGo.transform.position = _initialIndicatorPos;
+			iTween.Stop(songTextGo);
+			iTween.MoveBy(songTextGo, _moveDownHashtable);
+			iTween.ValueTo(songTextGo, _songIndicatorFadeHashtable);
+			_beatInputService.OnMetronomeTick -= OnMetronomeTickSongIndicator;
+			_isExecutingSong = false;
 		}
 
 		private void OnGameStarted() {
@@ -111,7 +162,7 @@ namespace Rhythm.Managers {
 
 			_beatHitFadeHashtable["onupdate"] = CreateFadeDelegate(hitImage);
 			GameObject hitImageGo = hitImage.gameObject;
-			hitImageGo.transform.eulerAngles = UnityEngine.Random.value * 90 * Vector3.back;
+			hitImageGo.transform.eulerAngles = Random.value * 90 * Vector3.back;
 			Vector2 center = new Vector2(Screen.width / 2f, Screen.height / 2f);
 			hitImageGo.transform.position = Vector2.Lerp(center, _latestTouchPosition, .5f);
 			iTween.PunchScale(hitImageGo, _punchScaleHashtable);
@@ -136,7 +187,7 @@ namespace Rhythm.Managers {
 		}
 
 		private void OnMetronomeTick() {
-			_audioService.PlayOneShot(clipBeat);
+			_audioService.PlayOneShot(clipBeat, _isExecutingSong ? .15f : 1);
 			iTween.ValueTo(gameObject, _overlayFadeHashtable);
 		}
 		

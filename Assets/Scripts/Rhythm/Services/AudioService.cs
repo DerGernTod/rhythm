@@ -7,8 +7,8 @@ namespace Rhythm.Services {
 			_provider = provider;
 		}
 
-		public void PlayOneShot(AudioClip clip) {
-			_provider.PlayOneShot(clip);
+		public void PlayOneShot(AudioClip clip, float volume = 1) {
+			_provider.PlayOneShot(clip, volume);
 		}
 		
 		public void Initialize() {

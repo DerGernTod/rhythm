@@ -44,9 +44,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1aa24d4bdfee44979d3185069da38d5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  missClip: {fileID: 8300000, guid: 71be19cdc562d1b43a514f1839090ef0, type: 3}
+  missClip: {fileID: 8300000, guid: f00eed146c8e73140ad1d50b0ebc73de, type: 3}
   badClip: {fileID: 8300000, guid: 5b9e1e778f3e00845b210ce0cea7bc6e, type: 3}
-  goodClip: {fileID: 8300000, guid: f00eed146c8e73140ad1d50b0ebc73de, type: 3}
+  goodClip: {fileID: 8300000, guid: 71be19cdc562d1b43a514f1839090ef0, type: 3}
   perfectClip: {fileID: 8300000, guid: 8a5ac41c9f20c854aa752b731f2d8364, type: 3}
   startClip: {fileID: 8300000, guid: e5b955267793d3a458b8c27006213351, type: 3}
 --- !u!114 &8628707009095096930

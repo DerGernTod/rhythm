@@ -11,17 +11,25 @@ namespace Rhythm.Services {
         public event Action OnStreakLost;
         public event Action<NoteQuality, float, int> OnNoteHit;
         public event Action<Song> OnExecutionStarted;
+        public event Action<Song> OnAfterExecutionStarted;
         public event Action<Song> OnExecutionAborted;
         public event Action<Song> OnExecutionFinished;
+        public event Action<Song> OnAfterExecutionFinished;
         public event Action OnMetronomeTick;
+        public const float FAIL_TOLERANCE = .10f;
         public const float NOTE_TIME = .75f;
         public const float HALF_NOTE_TIME = NOTE_TIME / 2f;
-        public const float QUARTER_NOTE_TIME = NOTE_TIME / 4f;
-        public const float FAIL_TOLERANCE = .10f;
+        private const float QUARTER_NOTE_TIME = NOTE_TIME / 4f;
+        private const float FAIL_TOLERANCE_GOOD = FAIL_TOLERANCE * .5f;
+        private const float FAIL_TOLERANCE_PERFECT = FAIL_TOLERANCE * .15f;
         private const float MAX_WAIT_FOR_SECOND_BEAT = 8 * NOTE_TIME + FAIL_TOLERANCE;
         private const float INDICATOR_TOLERANCE = .02f;
         private const float INDICATOR_WAIT_TIME = HALF_NOTE_TIME - INDICATOR_TOLERANCE;
 
+        public float MetronomeDiff { get; private set; }
+        public bool HasBeat => _hasBeat;
+
+        private double _prevMetronomeTickTime;
         private double _lastMetronomeTickTime;
         private double _lastMetronomeTickAbsolute;
         private double _currentBeatStartTimeAbs;
@@ -40,7 +48,9 @@ namespace Rhythm.Services {
         private Action _currentCommandUpdate = Constants.Noop;
         private Action<float> _update = Constants.NoopFloat;
         private Action _fixedUpdate = Constants.Noop;
+        private Action _beatInputHandler = Constants.Noop;
         private Coroutine _metronomeCoroutine;
+        
         public BeatInputService(MonoBehaviour coroutineProvider) {
             _coroutineProvider = coroutineProvider;
         }
@@ -66,8 +76,12 @@ namespace Rhythm.Services {
         }
 
         private void OnGameStarted() {
+            _prevMetronomeTickTime = AudioSettings.dspTime - HALF_NOTE_TIME;
+            _lastMetronomeTickTime = AudioSettings.dspTime;
+            _lastMetronomeTickAbsolute = AudioSettings.dspTime;
             _update = BeatInputUpdate;
             _fixedUpdate = MetronomeTickUpdate;
+            _beatInputHandler = HandleTouchDown;
         }
         private void Cleanup() {
             _currentCommandUpdate = Constants.Noop;
@@ -90,26 +104,45 @@ namespace Rhythm.Services {
 
         public void FixedUpdate() {
             _fixedUpdate();
+            
         }
 
         private void MetronomeTickUpdate() {
-// metronome should kick in a tiny bit earlier than you'd expect
+            MetronomeDiff = CalcMetronomeDiff() + HALF_NOTE_TIME - INDICATOR_TOLERANCE;
+            // metronome should kick in a tiny bit earlier than you'd expect (INDICATOR_WAIT_TIME)
             if (AudioSettings.dspTime - _lastMetronomeTickTime >= INDICATOR_WAIT_TIME
                 && AudioSettings.dspTime - _lastMetronomeTickAbsolute >= QUARTER_NOTE_TIME) {
                 if (_tickMetronome) {
                     OnMetronomeTick?.Invoke();
+                } else {
+                    // reset prev only on every other half tick to have the metronome diff in the middle
+                    _prevMetronomeTickTime = _lastMetronomeTickTime;
                 }
 
                 _tickMetronome = !_tickMetronome;
                 _lastMetronomeTickTime = RoundToMetronome(AudioSettings.dspTime);
+                // double prevTick = _lastMetronomeTickAbsolute;
                 _lastMetronomeTickAbsolute = AudioSettings.dspTime;
+                // Debug.Log("Metronome tick at " + _lastMetronomeTickAbsolute + ", " + (_lastMetronomeTickAbsolute - prevTick));
             }
+        }
+
+        public void EnableTouchHandler() {
+            _beatInputHandler = HandleTouchDown;
+        }
+
+        public void DisableTouchHandler() {
+            _beatInputHandler = Constants.Noop;
         }
 
         private void BeatInputUpdate(float deltaTime) {
             _currentCommandUpdate();
             _currentBeatRunTime = AudioSettings.dspTime - _currentBeatStartTimeAbs;
-            
+
+            _beatInputHandler();
+        }
+
+        private void HandleTouchDown() {
             bool mouseButtonDown = Input.GetMouseButtonDown(0);
             // break the streak in case the current beat was not successfully started after a full tact (MaxWaitForSecondBeat)
             // break the streak if a drum was hit while a song is executing
@@ -119,7 +152,7 @@ namespace Rhythm.Services {
                                 "_currentBeatRunTime: {1} vs. max: {2}" +
                                 "_beatStarterEnabled: {3}" +
                                 "mouseButtonDown: {4}" +
-                                "_currentSong is null: {5}", 
+                                "_currentSong is null: {5}",
                     _hasBeat,
                     _currentBeatRunTime,
                     MAX_WAIT_FOR_SECOND_BEAT,
@@ -132,8 +165,8 @@ namespace Rhythm.Services {
 
             // break the beat if there was no hit after the max beat time
             if (!mouseButtonDown && _hasBeat
-                && AudioSettings.dspTime > _lastNoteTimeAbs + NOTE_TIME + FAIL_TOLERANCE
-                && _currentBeatRunTime < 4 * NOTE_TIME + FAIL_TOLERANCE) {
+                                 && AudioSettings.dspTime > _lastNoteTimeAbs + NOTE_TIME + FAIL_TOLERANCE
+                                 && _currentBeatRunTime < 4 * NOTE_TIME + FAIL_TOLERANCE) {
                 HandleBeatLost();
                 return;
             }
@@ -164,6 +197,11 @@ namespace Rhythm.Services {
                 if (_currentSong != null) {
                     _currentSong.FinishCommandExecution();
                     OnExecutionFinished?.Invoke(_currentSong);
+                    Song activeSong = _currentSong;
+                    _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(HALF_NOTE_TIME, () => {
+                        OnAfterExecutionFinished?.Invoke(activeSong);
+                        EnableTouchHandler();
+                    }));
                 }
 
                 _currentCommandUpdate = Constants.Noop;
@@ -205,11 +243,11 @@ namespace Rhythm.Services {
         private static NoteQuality CalcNoteQuality(float beatTimeDiff) {
             float absBeatTimeDiff = Mathf.Abs(beatTimeDiff);
 
-            if (absBeatTimeDiff < FAIL_TOLERANCE * .15f) {
+            if (absBeatTimeDiff < FAIL_TOLERANCE_PERFECT) {
                 return NoteQuality.Perfect;
             }
 
-            if (absBeatTimeDiff < FAIL_TOLERANCE * .5f) {
+            if (absBeatTimeDiff < FAIL_TOLERANCE_GOOD) {
                 return NoteQuality.Good;
             }
 
@@ -238,6 +276,11 @@ namespace Rhythm.Services {
             return _lastMetronomeTickTime + metronomeTick * HALF_NOTE_TIME;
         }
 
+        private float CalcMetronomeDiff() {
+            double notRounded = (AudioSettings.dspTime - _prevMetronomeTickTime) / NOTE_TIME;
+            return (float)(NOTE_TIME - notRounded);
+        }
+
         private void StartBeat() {
             _currentBeatStartTimeAbs = RoundToMetronome(AudioSettings.dspTime);
             _currentBeatRunTime = 0;
@@ -250,6 +293,10 @@ namespace Rhythm.Services {
             OnNoteHit?.Invoke(hitNoteQuality, beatTimeDiff, _numSuccessfulBeats);
             _currentSong = matchingSong;
             _currentSong.ExecuteCommand(hitNoteQuality, _numSuccessfulBeats);
+            _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(HALF_NOTE_TIME, () => {
+                OnAfterExecutionStarted?.Invoke(matchingSong);
+                DisableTouchHandler();
+            }));
             OnExecutionStarted?.Invoke(_currentSong);
             _currentCommandUpdate = _currentSong.ExecuteCommandUpdate;
             ResetBeatAfterSeconds(NOTE_TIME * 4);
