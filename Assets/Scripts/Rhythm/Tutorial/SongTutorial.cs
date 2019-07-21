@@ -1,4 +1,5 @@
 using System;
+using Rhythm.Data;
 using Rhythm.Services;
 using Rhythm.Songs;
 using Rhythm.Utils;
@@ -47,6 +48,7 @@ namespace Rhythm.Tutorial {
         }
 
         private void OnGameStarted() {
+            ServiceLocator.Get<PersistenceService>().CurrentPlayer.LearnSong(songData);
             _beatInputService.OnAfterExecutionStarted += OnAfterExecutionStarted;
             _beatInputService.OnAfterExecutionFinished += OnAfterExecutionFinished;
             _beatInputService.OnBeatLost += OnBeatLost;

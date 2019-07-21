@@ -17,7 +17,8 @@ namespace Rhythm.Services {
                 { typeof(BeatInputService), beatInputService },
                 { typeof(AudioService), new AudioService(GetComponent<AudioSource>())},
                 { typeof(UnitService), new UnitService() },
-                { typeof(GameStateService), new GameStateService() }
+                { typeof(GameStateService), new GameStateService() },
+                { typeof(PersistenceService), new PersistenceService() }
             };
             updateableServices = new IUpdateableService[] {
                 beatInputService
