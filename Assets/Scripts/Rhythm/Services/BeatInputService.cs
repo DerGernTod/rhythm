@@ -22,7 +22,7 @@ namespace Rhythm.Services {
         private const float QUARTER_NOTE_TIME = NOTE_TIME / 4f;
         private const float FAIL_TOLERANCE_GOOD = FAIL_TOLERANCE * .5f;
         private const float FAIL_TOLERANCE_PERFECT = FAIL_TOLERANCE * .15f;
-        private const float MAX_WAIT_FOR_SECOND_BEAT = 8 * NOTE_TIME + FAIL_TOLERANCE;
+        private const float MAX_WAIT_FOR_SECOND_BEAT = 8.5f * NOTE_TIME + FAIL_TOLERANCE;
         private const float INDICATOR_TOLERANCE = .02f;
         private const float INDICATOR_WAIT_TIME = HALF_NOTE_TIME - INDICATOR_TOLERANCE;
 
@@ -31,6 +31,7 @@ namespace Rhythm.Services {
 
         private double _prevMetronomeTickTime;
         private double _lastMetronomeTickTime;
+        private double _lastMetronomeFullTickTime;
         private double _lastMetronomeTickAbsolute;
         private double _currentBeatStartTimeAbs;
         private double _lastNoteTimeAbs;
@@ -76,9 +77,11 @@ namespace Rhythm.Services {
         }
 
         private void OnGameStarted() {
-            _prevMetronomeTickTime = AudioSettings.dspTime - HALF_NOTE_TIME;
-            _lastMetronomeTickTime = AudioSettings.dspTime;
-            _lastMetronomeTickAbsolute = AudioSettings.dspTime;
+            double dspTime = AudioSettings.dspTime;
+            _prevMetronomeTickTime = dspTime - HALF_NOTE_TIME;
+            _lastMetronomeTickTime = dspTime;
+            _lastMetronomeFullTickTime = dspTime;
+            _lastMetronomeTickAbsolute = dspTime;
             _update = BeatInputUpdate;
             _fixedUpdate = MetronomeTickUpdate;
             _beatInputHandler = HandleTouchDown;
@@ -108,11 +111,12 @@ namespace Rhythm.Services {
         }
 
         private void MetronomeTickUpdate() {
-            MetronomeDiff = CalcMetronomeDiff() + HALF_NOTE_TIME - INDICATOR_TOLERANCE;
+            MetronomeDiff = CalcMetronomeDiffSinceLastTick() + HALF_NOTE_TIME - INDICATOR_TOLERANCE;
             // metronome should kick in a tiny bit earlier than you'd expect (INDICATOR_WAIT_TIME)
             if (AudioSettings.dspTime - _lastMetronomeTickTime >= INDICATOR_WAIT_TIME
                 && AudioSettings.dspTime - _lastMetronomeTickAbsolute >= QUARTER_NOTE_TIME) {
                 if (_tickMetronome) {
+                    _lastMetronomeFullTickTime = RoundToMetronome(AudioSettings.dspTime);
                     OnMetronomeTick?.Invoke();
                 } else {
                     // reset prev only on every other half tick to have the metronome diff in the middle
@@ -211,15 +215,22 @@ namespace Rhythm.Services {
         }
 
         private void HandleNote() {
-            NoteQuality hitNoteQuality;
-            float noteTimeDiff = 0;
-            _lastNoteTimeAbs = RoundToMetronome(AudioSettings.dspTime);
-            if (!_hasBeat || _currentBeatRunTime >= 8 * NOTE_TIME - FAIL_TOLERANCE) {
-                StartBeat();
-                hitNoteQuality = NoteQuality.Start;
-            } else {
-                noteTimeDiff = CalcBeatDiff();
-                hitNoteQuality = CalcNoteQuality(noteTimeDiff);
+            double dspTime = AudioSettings.dspTime;
+            double closestHalfNote = RoundToMetronome(dspTime);
+            double closestFullNote = RoundToMetronomeFull(dspTime);
+            _lastNoteTimeAbs = closestHalfNote;
+            float noteTimeDiff = (float)(_lastNoteTimeAbs - dspTime);
+            float noteTimeDiffToFull = (float) (closestFullNote - dspTime);
+            bool canCreateBeat = !_hasBeat || _currentBeatRunTime >= 8 * NOTE_TIME - FAIL_TOLERANCE;
+            
+            if (canCreateBeat && Mathf.Abs(noteTimeDiffToFull) <= FAIL_TOLERANCE) {
+                _currentBeatRunTime = noteTimeDiffToFull;
+                _currentBeatStartTimeAbs = RoundToMetronome(dspTime);
+            }
+            NoteQuality hitNoteQuality = CalcNoteQuality(noteTimeDiff);
+
+            if (hitNoteQuality != NoteQuality.Miss) {
+                _currentNotes.Add(Mathf.RoundToInt((float) _currentBeatRunTime / NOTE_TIME));
             }
 
             _hasBeat = true;
@@ -257,35 +268,19 @@ namespace Rhythm.Services {
 
             return NoteQuality.Miss;
         }
-
-        private float CalcBeatDiff() {
-            float currentBeatRunTimeFloat = (float)_currentBeatRunTime;
-            double targetBeatTime = RoundToBeatTime(currentBeatRunTimeFloat);
-            double beatTimeDiff = targetBeatTime - currentBeatRunTimeFloat;
-            _currentNotes.Add((float)targetBeatTime / NOTE_TIME);
-            return (float) beatTimeDiff;
-        }
-
-        private float RoundToBeatTime(float time) {
-            int currentBeatNum = Mathf.RoundToInt(time / HALF_NOTE_TIME);
-            return currentBeatNum * HALF_NOTE_TIME;
-        }
-
+        
         private double RoundToMetronome(double time) {
             int metronomeTick = Mathf.RoundToInt((float)(time - _lastMetronomeTickTime) / HALF_NOTE_TIME);
             return _lastMetronomeTickTime + metronomeTick * HALF_NOTE_TIME;
         }
-
-        private float CalcMetronomeDiff() {
-            double notRounded = (AudioSettings.dspTime - _prevMetronomeTickTime) / NOTE_TIME;
-            return (float)(NOTE_TIME - notRounded);
+        private double RoundToMetronomeFull(double time) {
+            int metronomeTick = Mathf.RoundToInt((float)(time - _lastMetronomeFullTickTime) / NOTE_TIME);
+            return _lastMetronomeFullTickTime + metronomeTick * NOTE_TIME;
         }
 
-        private void StartBeat() {
-            _currentBeatStartTimeAbs = RoundToMetronome(AudioSettings.dspTime);
-            _currentBeatRunTime = 0;
-            _currentNotes.Add(0);
-            Debug.Log("Starting beat at " + _currentBeatStartTimeAbs);
+        private float CalcMetronomeDiffSinceLastTick() {
+            double notRounded = (AudioSettings.dspTime - _prevMetronomeTickTime) / NOTE_TIME;
+            return (float)(NOTE_TIME - notRounded);
         }
 
         private void ExecuteSong(NoteQuality hitNoteQuality, float beatTimeDiff, Song matchingSong) {

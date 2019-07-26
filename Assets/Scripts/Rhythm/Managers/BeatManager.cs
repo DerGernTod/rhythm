@@ -3,6 +3,7 @@ using System.Collections;
 using Rhythm.Services;
 using Rhythm.Songs;
 using Rhythm.Utils;
+using TheNode.UI;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -19,7 +20,7 @@ namespace Rhythm.Managers {
 		[SerializeField] private Image hitNice;
 		[SerializeField] private Image hitGood;
 		[SerializeField] private Text songIndicator;
-
+		[SerializeField] private AnimatedText streakText;
 #pragma warning restore 0649
 		private class BeatImageDictionary : SerializableDictionary<NoteQuality, Image> {}
 		
@@ -29,6 +30,7 @@ namespace Rhythm.Managers {
 		private Action _update = Constants.Noop;
 		private Vector3 _initialIndicatorPos;
 		private bool _isExecutingSong;
+		private int _prevStreak;
 		private readonly Hashtable _overlayFadeHashtable = new Hashtable {
 			{ "from", .5f },
 			{ "to", 0 }
@@ -62,7 +64,6 @@ namespace Rhythm.Managers {
 			_beatInputService = ServiceLocator.Get<BeatInputService>();
 			_beatHitImages = new BeatImageDictionary {
 				{ NoteQuality.Good, hitGood },
-				{ NoteQuality.Start, hitGood },
 				{ NoteQuality.Miss, hitMiss },
 				{ NoteQuality.Perfect, hitNice }
 			};
@@ -129,6 +130,7 @@ namespace Rhythm.Managers {
 		private void OnGameStarted() {
 			_update = Constants.Noop;
 			_beatInputService.OnMetronomeTick += OnMetronomeTick;
+			streakText.StartAnimation(1 / BeatInputService.NOTE_TIME);
 		}
 		
 		private void OnGameFinished() {
@@ -144,7 +146,6 @@ namespace Rhythm.Managers {
 
 		private void OnNoteHit(NoteQuality quality, float diff, int streak) {
 			updateClickLocation();
-
 			Image hitImage;
 			switch (quality) {
 				case NoteQuality.Bad:
@@ -153,7 +154,10 @@ namespace Rhythm.Managers {
 				case NoteQuality.Miss:
 				case NoteQuality.Good:
 				case NoteQuality.Perfect:
-				case NoteQuality.Start:
+					if (streak > 0 && quality != NoteQuality.Miss) {
+						StartCoroutine(Coroutines.FadeTo(streakText.GetComponent<CanvasGroup>(), 1,
+							BeatInputService.HALF_NOTE_TIME));
+					}
 					hitImage = _beatHitImages[quality];
 					break;
 				default:
@@ -167,6 +171,10 @@ namespace Rhythm.Managers {
 			hitImageGo.transform.position = Vector2.Lerp(center, _latestTouchPosition, .5f);
 			iTween.PunchScale(hitImageGo, _punchScaleHashtable);
 			iTween.ValueTo(hitImageGo, _beatHitFadeHashtable);
+			if (streak > _prevStreak) {
+				streakText.TriggerImpulse();
+			}
+			_prevStreak = streak;
 		}
 
 		private void OnStreakLost() {
@@ -179,6 +187,9 @@ namespace Rhythm.Managers {
 			hitImageGo.transform.position = Vector2.Lerp(center, _latestTouchPosition, .5f);
 			iTween.MoveBy(hitImageGo, _moveDownHashtable);
 			iTween.ValueTo(hitImageGo, _beatHitFadeHashtable);
+			
+			StartCoroutine(Coroutines.FadeTo(streakText.GetComponent<CanvasGroup>(), 0,
+				BeatInputService.HALF_NOTE_TIME));
 		}
 
 		// Update is called once per frame

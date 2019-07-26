@@ -18,8 +18,7 @@ namespace Rhythm.Managers {
                 {NoteQuality.Bad, badClip},
                 {NoteQuality.Good, goodClip},
                 {NoteQuality.Miss, missClip},
-                {NoteQuality.Perfect, perfectClip},
-                {NoteQuality.Start, startClip}
+                {NoteQuality.Perfect, perfectClip}
             };
             _beatInputService = ServiceLocator.Get<BeatInputService>();
             _beatInputService.OnNoteHit += OnNoteHit;

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Rhythm.Data;
 using Rhythm.Services;
 using Rhythm.Songs;
@@ -19,6 +20,7 @@ namespace Rhythm.Tutorial {
         private BeatInputService _beatInputService;
         private GameStateService _gameStateService;
         private CanvasGroup _canvasGroup;
+        private Coroutine _canvasGroupFadeCoroutine;
         private Action _update = Constants.Noop;
         private int _metronomeTick = -1;
         private float _indicatorWidth;
@@ -80,15 +82,24 @@ namespace Rhythm.Tutorial {
             };
         }
 
+        private void TriggerFade(float target) {
+            if (_canvasGroupFadeCoroutine != null) {
+                StopCoroutine(_canvasGroupFadeCoroutine);
+            }
+
+            _canvasGroupFadeCoroutine =
+                StartCoroutine(Coroutines.FadeTo(_canvasGroup, target, BeatInputService.HALF_NOTE_TIME));
+        }
+
         private void OnBeatLost() {
             _beatInputService.OnNoteHit += OnNoteHit;
-            StartCoroutine(Coroutines.FadeTo(_canvasGroup, 0, BeatInputService.HALF_NOTE_TIME));
+            TriggerFade(0);
         }
 
         private void OnNoteHit(NoteQuality quality, float arg2, int arg3) {
             if (quality != NoteQuality.Miss) {
                 ResetBeat();
-                StartCoroutine(Coroutines.FadeTo(_canvasGroup, 1, BeatInputService.HALF_NOTE_TIME));
+                TriggerFade(1);
                 _beatInputService.OnNoteHit -= OnNoteHit;
             }
         }
@@ -99,11 +110,11 @@ namespace Rhythm.Tutorial {
         }
 
         private void OnAfterExecutionFinished(Song obj) {
-            StartCoroutine(Coroutines.FadeTo(_canvasGroup, 1, BeatInputService.HALF_NOTE_TIME));
+            TriggerFade(1);
         }
 
         private void OnAfterExecutionStarted(Song song) {
-            StartCoroutine(Coroutines.FadeTo(_canvasGroup, .25f, BeatInputService.HALF_NOTE_TIME));
+            TriggerFade(.25f);
         }
 
         private void Update() {

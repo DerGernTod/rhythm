@@ -3,7 +3,6 @@
         Miss,
         Bad,
         Good,
-        Perfect,
-        Start
+        Perfect
     }
 }
