@@ -8,7 +8,6 @@ namespace Rhythm.Services {
     [Serializable]
     public class BeatInputService : IUpdateableService {
         public event Action OnBeatLost;
-        public event Action OnStreakLost;
         public event Action<NoteQuality, float, int> OnNoteHit;
         public event Action<Song> OnExecutionStarted;
         public event Action<Song> OnAfterExecutionStarted;
@@ -22,12 +21,12 @@ namespace Rhythm.Services {
         private const float QUARTER_NOTE_TIME = NOTE_TIME / 4f;
         private const float FAIL_TOLERANCE_GOOD = FAIL_TOLERANCE * .5f;
         private const float FAIL_TOLERANCE_PERFECT = FAIL_TOLERANCE * .15f;
-        private const float MAX_WAIT_FOR_SECOND_BEAT = 8.5f * NOTE_TIME + FAIL_TOLERANCE;
+        private const float MAX_WAIT_FOR_SECOND_BEAT = 8f * NOTE_TIME + FAIL_TOLERANCE;
         private const float INDICATOR_TOLERANCE = .02f;
         private const float INDICATOR_WAIT_TIME = HALF_NOTE_TIME - INDICATOR_TOLERANCE;
 
         public float MetronomeDiff { get; private set; }
-        public bool HasBeat => _hasBeat;
+        public bool HasBeat { get; private set; }
 
         private double _prevMetronomeTickTime;
         private double _lastMetronomeTickTime;
@@ -36,7 +35,6 @@ namespace Rhythm.Services {
         private double _currentBeatStartTimeAbs;
         private double _lastNoteTimeAbs;
         private float _givenBeat;
-        private bool _hasBeat;
         private bool _beatStarterEnabled = true;
         private bool _tickMetronome = true;
         private double _currentBeatRunTime;
@@ -60,7 +58,6 @@ namespace Rhythm.Services {
             #if UNITY_EDITOR
             OnNoteHit += (quality, diff, streak) => Debug.Log("Beat hit: " + quality + " - diff: " + diff + " - streak: " + streak);
             OnBeatLost += () => Debug.Log("Beat lost...");
-            OnStreakLost += () => Debug.Log("Streak lost...");
             OnExecutionStarted += song => Debug.Log("Executing song " + song.Name);
             OnExecutionFinished += song => Debug.Log("Finished executing song " + song.Name);
             #endif
@@ -111,12 +108,14 @@ namespace Rhythm.Services {
         }
 
         private void MetronomeTickUpdate() {
-            MetronomeDiff = CalcMetronomeDiffSinceLastTick() + HALF_NOTE_TIME - INDICATOR_TOLERANCE;
+            double dspTime = AudioSettings.dspTime;
+            // MetronomeDiff = CalcMetronomeDiffSinceLastTick() + HALF_NOTE_TIME - INDICATOR_TOLERANCE;
+            MetronomeDiff = (float)(RoundToMetronomeFull(dspTime) - dspTime);
             // metronome should kick in a tiny bit earlier than you'd expect (INDICATOR_WAIT_TIME)
-            if (AudioSettings.dspTime - _lastMetronomeTickTime >= INDICATOR_WAIT_TIME
-                && AudioSettings.dspTime - _lastMetronomeTickAbsolute >= QUARTER_NOTE_TIME) {
+            if (dspTime - _lastMetronomeTickTime >= INDICATOR_WAIT_TIME
+                && dspTime - _lastMetronomeTickAbsolute >= QUARTER_NOTE_TIME) {
                 if (_tickMetronome) {
-                    _lastMetronomeFullTickTime = RoundToMetronome(AudioSettings.dspTime);
+                    _lastMetronomeFullTickTime = RoundToMetronome(dspTime);
                     OnMetronomeTick?.Invoke();
                 } else {
                     // reset prev only on every other half tick to have the metronome diff in the middle
@@ -124,9 +123,9 @@ namespace Rhythm.Services {
                 }
 
                 _tickMetronome = !_tickMetronome;
-                _lastMetronomeTickTime = RoundToMetronome(AudioSettings.dspTime);
+                _lastMetronomeTickTime = RoundToMetronome(dspTime);
                 // double prevTick = _lastMetronomeTickAbsolute;
-                _lastMetronomeTickAbsolute = AudioSettings.dspTime;
+                _lastMetronomeTickAbsolute = dspTime;
                 // Debug.Log("Metronome tick at " + _lastMetronomeTickAbsolute + ", " + (_lastMetronomeTickAbsolute - prevTick));
             }
         }
@@ -150,14 +149,14 @@ namespace Rhythm.Services {
             bool mouseButtonDown = Input.GetMouseButtonDown(0);
             // break the streak in case the current beat was not successfully started after a full tact (MaxWaitForSecondBeat)
             // break the streak if a drum was hit while a song is executing
-            if (_hasBeat && _currentBeatRunTime >= MAX_WAIT_FOR_SECOND_BEAT && _beatStarterEnabled
+            if (HasBeat && _currentBeatRunTime >= MAX_WAIT_FOR_SECOND_BEAT && _beatStarterEnabled
                 || mouseButtonDown && _currentSong != null) {
                 Debug.LogFormat("Streak lost. Details: _hasBeat: {0}, " +
                                 "_currentBeatRunTime: {1} vs. max: {2}" +
                                 "_beatStarterEnabled: {3}" +
                                 "mouseButtonDown: {4}" +
                                 "_currentSong is null: {5}",
-                    _hasBeat,
+                    HasBeat,
                     _currentBeatRunTime,
                     MAX_WAIT_FOR_SECOND_BEAT,
                     _beatStarterEnabled,
@@ -168,7 +167,7 @@ namespace Rhythm.Services {
             }
 
             // break the beat if there was no hit after the max beat time
-            if (!mouseButtonDown && _hasBeat
+            if (!mouseButtonDown && HasBeat
                                  && AudioSettings.dspTime > _lastNoteTimeAbs + NOTE_TIME + FAIL_TOLERANCE
                                  && _currentBeatRunTime < 4 * NOTE_TIME + FAIL_TOLERANCE) {
                 HandleBeatLost();
@@ -176,21 +175,18 @@ namespace Rhythm.Services {
             }
 
             if (mouseButtonDown && _beatStarterEnabled) {
-                HandleNote();
+                HandleNoteHit();
             }
         }
 
-        private void HandleBeatLost(bool justLoseStreak = false) {
-            if (!justLoseStreak) {
-                OnBeatLost?.Invoke();
-            }
-            OnStreakLost?.Invoke();
+        private void HandleBeatLost() {
+            OnBeatLost?.Invoke();
             if (_currentSong != null) {
                 OnExecutionAborted?.Invoke(_currentSong);
                 _currentSong = null;
             }
             _numSuccessfulBeats = 0;
-            _hasBeat = false;
+            HasBeat = false;
             ResetBeatAfterSeconds(1);
         }
 
@@ -214,14 +210,14 @@ namespace Rhythm.Services {
             }));
         }
 
-        private void HandleNote() {
+        private void HandleNoteHit() {
             double dspTime = AudioSettings.dspTime;
             double closestHalfNote = RoundToMetronome(dspTime);
             double closestFullNote = RoundToMetronomeFull(dspTime);
             _lastNoteTimeAbs = closestHalfNote;
             float noteTimeDiff = (float)(_lastNoteTimeAbs - dspTime);
             float noteTimeDiffToFull = (float) (closestFullNote - dspTime);
-            bool canCreateBeat = !_hasBeat || _currentBeatRunTime >= 8 * NOTE_TIME - FAIL_TOLERANCE;
+            bool canCreateBeat = !HasBeat || _currentBeatRunTime >= 8 * NOTE_TIME - FAIL_TOLERANCE;
             
             if (canCreateBeat && Mathf.Abs(noteTimeDiffToFull) <= FAIL_TOLERANCE) {
                 _currentBeatRunTime = noteTimeDiffToFull;
@@ -233,7 +229,7 @@ namespace Rhythm.Services {
                 _currentNotes.Add(Mathf.RoundToInt((float) _currentBeatRunTime / NOTE_TIME));
             }
 
-            _hasBeat = true;
+            HasBeat = true;
             float[] notesAsArray = _currentNotes.ToArray();
             List<Song> matchingSongs = _songService.CheckSongs(notesAsArray);
             
@@ -276,11 +272,6 @@ namespace Rhythm.Services {
         private double RoundToMetronomeFull(double time) {
             int metronomeTick = Mathf.RoundToInt((float)(time - _lastMetronomeFullTickTime) / NOTE_TIME);
             return _lastMetronomeFullTickTime + metronomeTick * NOTE_TIME;
-        }
-
-        private float CalcMetronomeDiffSinceLastTick() {
-            double notRounded = (AudioSettings.dspTime - _prevMetronomeTickTime) / NOTE_TIME;
-            return (float)(NOTE_TIME - notRounded);
         }
 
         private void ExecuteSong(NoteQuality hitNoteQuality, float beatTimeDiff, Song matchingSong) {

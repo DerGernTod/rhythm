@@ -43,7 +43,7 @@ namespace Rhythm.Tutorial {
                 iTween.ScaleBy(pageToScale.gameObject, Vector3.one * 1.05f, 5);
                 _beatInputService.OnMetronomeTick += PunchDrum;
                 _beatInputService.OnNoteHit += OnNoteHit;
-                _beatInputService.OnStreakLost += OnStreakLost;
+                _beatInputService.OnBeatLost += OnBeatLost;
                 _beatInputService.OnAfterExecutionStarted += OnAfterExecutionStarted;
                 _beatInputService.OnAfterExecutionFinished += OnAfterExecutionFinished;
                 _beatInputService.OnExecutionAborted += OnAfterExecutionFinished;
@@ -70,7 +70,7 @@ namespace Rhythm.Tutorial {
             
         }
 
-        private void OnStreakLost() {
+        private void OnBeatLost() {
             HandleFail();
         }
 
@@ -113,7 +113,7 @@ namespace Rhythm.Tutorial {
         private void OnDestroy() {
             _beatInputService.OnMetronomeTick -= PunchDrum;
             _beatInputService.OnNoteHit -= OnNoteHit;
-            _beatInputService.OnStreakLost -= OnStreakLost;
+            _beatInputService.OnBeatLost -= OnBeatLost;
             _beatInputService.OnAfterExecutionStarted -= OnAfterExecutionStarted;
             _beatInputService.OnAfterExecutionFinished -= OnAfterExecutionFinished;
             _beatInputService.OnExecutionAborted -= OnAfterExecutionFinished;

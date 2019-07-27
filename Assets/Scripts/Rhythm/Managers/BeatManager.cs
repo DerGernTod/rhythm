@@ -21,6 +21,7 @@ namespace Rhythm.Managers {
 		[SerializeField] private Image hitGood;
 		[SerializeField] private Text songIndicator;
 		[SerializeField] private AnimatedText streakText;
+		[SerializeField] private Gradient[] streakPowerGradients;
 #pragma warning restore 0649
 		private class BeatImageDictionary : SerializableDictionary<NoteQuality, Image> {}
 		
@@ -31,6 +32,8 @@ namespace Rhythm.Managers {
 		private Vector3 _initialIndicatorPos;
 		private bool _isExecutingSong;
 		private int _prevStreak;
+		private int _streakScore;
+		private int _streakPower;
 		private readonly Hashtable _overlayFadeHashtable = new Hashtable {
 			{ "from", .5f },
 			{ "to", 0 }
@@ -62,6 +65,7 @@ namespace Rhythm.Managers {
 		private void Start () {
 			_audioService = ServiceLocator.Get<AudioService>();
 			_beatInputService = ServiceLocator.Get<BeatInputService>();
+			_gameStateService = ServiceLocator.Get<GameStateService>();
 			_beatHitImages = new BeatImageDictionary {
 				{ NoteQuality.Good, hitGood },
 				{ NoteQuality.Miss, hitMiss },
@@ -71,10 +75,12 @@ namespace Rhythm.Managers {
 			_overlayFadeHashtable["onupdate"] = overlayFade;
 			overlayFade(0f);
 			_beatInputService.OnNoteHit += OnNoteHit;
-			_beatInputService.OnStreakLost += OnStreakLost;
+			_beatInputService.OnBeatLost += OnBeatLost;
 			_beatInputService.OnAfterExecutionStarted += OnAfterExecutionStarted;
 			_beatInputService.OnExecutionAborted += OnExecutionAborted;
 			_beatInputService.OnAfterExecutionFinished += OnAfterExecutionFinished;
+			_gameStateService.GameFinished += OnGameFinished;
+			_gameStateService.GameStarted += OnGameStarted;
 			updateClickLocation = () => {
 				if (Input.touches.Length > 0) {
 					_latestTouchPosition = Input.touches[0].position;
@@ -83,9 +89,6 @@ namespace Rhythm.Managers {
 					_latestTouchPosition = Input.mousePosition;
 				}
 			};
-			_gameStateService = ServiceLocator.Get<GameStateService>();
-			_gameStateService.GameFinished += OnGameFinished;
-			_gameStateService.GameStarted += OnGameStarted;
 			_initialIndicatorPos = songIndicator.transform.position;
 		}
 
@@ -142,28 +145,22 @@ namespace Rhythm.Managers {
 			_beatInputService.OnNoteHit -= OnNoteHit;
 			_gameStateService.GameFinished -= OnGameFinished;
 			_gameStateService.GameStarted -= OnGameStarted;
+			_beatInputService.OnBeatLost -= OnBeatLost;
+			_beatInputService.OnAfterExecutionStarted -= OnAfterExecutionStarted;
+			_beatInputService.OnExecutionAborted -= OnExecutionAborted;
+			_beatInputService.OnAfterExecutionFinished -= OnAfterExecutionFinished;
 		}
 
 		private void OnNoteHit(NoteQuality quality, float diff, int streak) {
 			updateClickLocation();
+			int score = (int)quality;
+			_streakScore += score;
 			Image hitImage;
-			switch (quality) {
-				case NoteQuality.Bad:
-					hitImage = diff > 0 ? hitEarly : hitLate;
-					break;
-				case NoteQuality.Miss:
-				case NoteQuality.Good:
-				case NoteQuality.Perfect:
-					if (streak > 0 && quality != NoteQuality.Miss) {
-						StartCoroutine(Coroutines.FadeTo(streakText.GetComponent<CanvasGroup>(), 1,
-							BeatInputService.HALF_NOTE_TIME));
-					}
-					hitImage = _beatHitImages[quality];
-					break;
-				default:
-					return;
+			if (quality == NoteQuality.Bad) {
+				hitImage = diff > 0 ? hitEarly : hitLate;
+			} else {
+				hitImage = _beatHitImages[quality];
 			}
-
 			_beatHitFadeHashtable["onupdate"] = CreateFadeDelegate(hitImage);
 			GameObject hitImageGo = hitImage.gameObject;
 			hitImageGo.transform.eulerAngles = Random.value * 90 * Vector3.back;
@@ -172,12 +169,19 @@ namespace Rhythm.Managers {
 			iTween.PunchScale(hitImageGo, _punchScaleHashtable);
 			iTween.ValueTo(hitImageGo, _beatHitFadeHashtable);
 			if (streak > _prevStreak) {
-				streakText.TriggerImpulse();
+				int prevStreakPower = _streakPower;
+				_streakPower = Mathf.Min(_streakScore / Constants.REQUIRED_STREAK_SCORE, Constants.MAX_STREAK_POWER);
+				if (_streakPower > prevStreakPower) {
+					StartCoroutine(Coroutines.FadeTo(streakText.GetComponent<CanvasGroup>(), 1,
+						BeatInputService.HALF_NOTE_TIME));
+					streakText.SetGradient(streakPowerGradients[_streakPower - 1]);
+					streakText.TriggerImpulse();
+				}
 			}
 			_prevStreak = streak;
 		}
 
-		private void OnStreakLost() {
+		private void OnBeatLost() {
 			Image hitImage = _beatHitImages[NoteQuality.Miss];
 			_beatHitFadeHashtable["onupdate"] = CreateFadeDelegate(hitImage);
 			GameObject hitImageGo = hitImage.gameObject;
@@ -187,7 +191,8 @@ namespace Rhythm.Managers {
 			hitImageGo.transform.position = Vector2.Lerp(center, _latestTouchPosition, .5f);
 			iTween.MoveBy(hitImageGo, _moveDownHashtable);
 			iTween.ValueTo(hitImageGo, _beatHitFadeHashtable);
-			
+			_streakScore = 0;
+			_streakPower = 0;
 			StartCoroutine(Coroutines.FadeTo(streakText.GetComponent<CanvasGroup>(), 0,
 				BeatInputService.HALF_NOTE_TIME));
 		}

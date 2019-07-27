@@ -56,7 +56,7 @@ namespace Rhythm.Tutorial {
             _beatInputService.OnBeatLost += OnBeatLost;
             OnBeatLost();
             _update = () => {
-                float metronomeDiff = _beatInputService.MetronomeDiff;
+                float metronomeDiff = _beatInputService.MetronomeDiff / BeatInputService.NOTE_TIME;
                 if (_beatInputService.HasBeat && !_hadBeat) {
                     ResetBeat();
                 }
@@ -105,8 +105,7 @@ namespace Rhythm.Tutorial {
         }
 
         private void ResetBeat() {
-            _metronomeTick = -1;
-            _lastMetronomeDiff = 0;
+            _metronomeTick = 0;
         }
 
         private void OnAfterExecutionFinished(Song obj) {

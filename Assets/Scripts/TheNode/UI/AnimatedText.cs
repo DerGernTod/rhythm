@@ -35,13 +35,17 @@ namespace TheNode.UI {
 
         private void OnEnable() {
             Reinitialize();
+            #if UNITY_EDITOR
             EditorApplication.update += Update;
+            #endif
         }
 
+#if UNITY_EDITOR
         private void OnDisable() {
             // ReSharper disable once DelegateSubtraction
             EditorApplication.update -= Update;
         }
+#endif
 
         public void Reinitialize() {
             _createdTexts = new List<Text>(GetComponentsInChildren<Text>());
@@ -124,6 +128,10 @@ namespace TheNode.UI {
 
         public void TriggerImpulse() {
             _highlightIndex = 0;
+        }
+
+        public void SetGradient(Gradient newGradient) {
+            gradient = newGradient;
         }
 
         private void Update() {
