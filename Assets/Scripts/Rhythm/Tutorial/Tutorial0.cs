@@ -4,6 +4,7 @@ using Rhythm.Songs;
 using Rhythm.UI;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -83,7 +84,7 @@ namespace Rhythm.Tutorial {
                     _successCount = 0;
                     SetMoodSpriteIndex(_moodIndex + 1);
                     if (streak == 6) {
-                        // FinishTutorial();
+                        FinishTutorial();
                     }
                 }
             } else {
@@ -103,6 +104,7 @@ namespace Rhythm.Tutorial {
         private void FinishTutorial() {
             OnDestroy();
             _gameStateService.TriggerGameFinished();
+            SceneManager.LoadScene("IngameScene");
         }
         
         private void SetMoodSpriteIndex(int index) {

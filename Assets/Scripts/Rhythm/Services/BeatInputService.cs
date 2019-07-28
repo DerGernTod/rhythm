@@ -28,13 +28,11 @@ namespace Rhythm.Services {
         public float MetronomeDiff { get; private set; }
         public bool HasBeat { get; private set; }
 
-        private double _prevMetronomeTickTime;
         private double _lastMetronomeTickTime;
         private double _lastMetronomeFullTickTime;
         private double _lastMetronomeTickAbsolute;
         private double _currentBeatStartTimeAbs;
         private double _lastNoteTimeAbs;
-        private float _givenBeat;
         private bool _beatStarterEnabled = true;
         private bool _tickMetronome = true;
         private double _currentBeatRunTime;
@@ -48,7 +46,6 @@ namespace Rhythm.Services {
         private Action<float> _update = Constants.NoopFloat;
         private Action _fixedUpdate = Constants.Noop;
         private Action _beatInputHandler = Constants.Noop;
-        private Coroutine _metronomeCoroutine;
         
         public BeatInputService(MonoBehaviour coroutineProvider) {
             _coroutineProvider = coroutineProvider;
@@ -75,7 +72,6 @@ namespace Rhythm.Services {
 
         private void OnGameStarted() {
             double dspTime = AudioSettings.dspTime;
-            _prevMetronomeTickTime = dspTime - HALF_NOTE_TIME;
             _lastMetronomeTickTime = dspTime;
             _lastMetronomeFullTickTime = dspTime;
             _lastMetronomeTickAbsolute = dspTime;
@@ -90,6 +86,17 @@ namespace Rhythm.Services {
             _currentNotes.Clear();
             _coroutineProvider.StopAllCoroutines();
             _currentBeatRunTime = 0;
+            _currentBeatStartTimeAbs = 0;
+            _lastNoteTimeAbs = 0;
+            _beatStarterEnabled = true;
+            _tickMetronome = true;
+            _numSuccessfulBeats = 0;
+            _currentSong = null;
+            _currentCommandUpdate = Constants.Noop;
+            _update = Constants.NoopFloat;
+            _fixedUpdate = Constants.Noop;
+            _beatInputHandler = Constants.Noop;
+            HasBeat = false;
         }
 
         public void Destroy() {
@@ -117,9 +124,6 @@ namespace Rhythm.Services {
                 if (_tickMetronome) {
                     _lastMetronomeFullTickTime = RoundToMetronome(dspTime);
                     OnMetronomeTick?.Invoke();
-                } else {
-                    // reset prev only on every other half tick to have the metronome diff in the middle
-                    _prevMetronomeTickTime = _lastMetronomeTickTime;
                 }
 
                 _tickMetronome = !_tickMetronome;
@@ -277,6 +281,10 @@ namespace Rhythm.Services {
         private void ExecuteSong(NoteQuality hitNoteQuality, float beatTimeDiff, Song matchingSong) {
             _numSuccessfulBeats++;
             OnNoteHit?.Invoke(hitNoteQuality, beatTimeDiff, _numSuccessfulBeats);
+            if (_beatInputHandler == Constants.Noop) {
+                // don't execute song if game has been finished with the last note
+                return;
+            }
             _currentSong = matchingSong;
             _currentSong.ExecuteCommand(hitNoteQuality, _numSuccessfulBeats);
             _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(HALF_NOTE_TIME, () => {

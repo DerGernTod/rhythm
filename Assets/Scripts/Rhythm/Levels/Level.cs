@@ -1,4 +1,6 @@
-﻿using Rhythm.Items;
+﻿using System.Collections;
+using Rhythm.Items;
+using Rhythm.Services;
 using UnityEngine;
 
 namespace Rhythm.Levels {
@@ -26,6 +28,11 @@ namespace Rhythm.Levels {
 			}
 
 			Instantiate(finishLinePrefab, Vector3.up * levelLength, Quaternion.identity, transform);
+			Invoke(nameof(StartGame), 3);
+		}
+
+		private void StartGame() {
+			ServiceLocator.Get<GameStateService>().TriggerGameStarted();
 		}
 		// Use this for initialization
 		void Start () {

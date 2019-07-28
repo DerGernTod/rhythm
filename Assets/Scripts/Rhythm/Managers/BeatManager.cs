@@ -132,12 +132,20 @@ namespace Rhythm.Managers {
 
 		private void OnGameStarted() {
 			_update = Constants.Noop;
+			_isExecutingSong = false;
+			_prevStreak = 0;
+			_streakScore = 0;
+			_streakPower = 0;
 			_beatInputService.OnMetronomeTick += OnMetronomeTick;
 			streakText.StartAnimation(1 / BeatInputService.NOTE_TIME);
 		}
 		
 		private void OnGameFinished() {
 			_update = Constants.Noop;
+			StartCoroutine(Coroutines.FadeTo(
+				streakText.GetComponent<CanvasGroup>(),
+				0,
+				BeatInputService.HALF_NOTE_TIME));
 			_beatInputService.OnMetronomeTick -= OnMetronomeTick;
 		}
 

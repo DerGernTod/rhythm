@@ -27,7 +27,7 @@ namespace Rhythm.Services {
         }
 
         private void AddKnownSong(SongData song) {
-            _knownSongs.Add(song.name, new Song(song.beats, song.name));
+            _knownSongs.Add(song.name, _songs[song.name]);
         }
 
         public void PostInitialize() {
