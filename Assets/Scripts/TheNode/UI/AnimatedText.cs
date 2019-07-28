@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -23,10 +24,10 @@ namespace TheNode.UI {
 #pragma warning restore 0649
 
         private Text _text;
-        private string _originalText;
         private string _cleanedText;
         private List<Text> _createdTexts;
         private List<RectTransform> _createdTransforms;
+        private List<float> _initialYPositions;
         private float _highlightIndex = -1;
 
         private void Start() {
@@ -50,17 +51,27 @@ namespace TheNode.UI {
         public void Reinitialize() {
             _createdTexts = new List<Text>(GetComponentsInChildren<Text>());
             _createdTransforms = new List<RectTransform>();
+            _initialYPositions = new List<float>();
             _text = GetComponent<Text>();
             int indexOfSelf = -1;
+            TextAnchor alignment = _text.alignment;
+            bool doRightToLeft = alignment == TextAnchor.UpperRight
+                                 || alignment == TextAnchor.MiddleRight
+                                 || alignment == TextAnchor.LowerRight;
             for (int index = 0; index < _createdTexts.Count; index++) {
-                Text createdText = _createdTexts[index];
+                int i = index;
+                if (doRightToLeft) {
+                    i = _createdTexts.Count - index - 1;
+                }
+                Text createdText = _createdTexts[i];
                 if (createdText.gameObject == gameObject) {
-                    indexOfSelf = index;
+                    indexOfSelf = i;
                     continue;
                 }
+
                 RectTransform rectTransform = createdText.GetComponent<RectTransform>();
-                rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, 0);
                 _createdTransforms.Add(rectTransform);
+                _initialYPositions.Add(rectTransform.anchoredPosition.y);
             }
             _createdTexts.RemoveAt(indexOfSelf);
         }
@@ -74,12 +85,37 @@ namespace TheNode.UI {
         public void Refresh() {
             List<RectTransform> newTransforms = new List<RectTransform>();
             List<Text> newTexts = new List<Text>();
-            _originalText = _text.text;
+            List<float> newYPositions = new List<float>();
             float xPos = 0;
-            for (int i = 0; i < _originalText.Length; i++) {
-                char c = _originalText[i];
+            TextAnchor alignment = _text.alignment;
+            bool doRightToLeft = alignment == TextAnchor.UpperRight
+                     || alignment == TextAnchor.MiddleRight
+                     || alignment == TextAnchor.LowerRight;
+            bool doCenter = alignment == TextAnchor.LowerCenter
+                            || alignment == TextAnchor.MiddleCenter
+                            || alignment == TextAnchor.UpperCenter;
+            
+            bool doFromUpper = alignment == TextAnchor.UpperCenter
+                               || alignment == TextAnchor.UpperLeft
+                               || alignment == TextAnchor.UpperRight;
+            bool doFromMiddle = alignment == TextAnchor.MiddleCenter
+                                || alignment == TextAnchor.MiddleLeft
+                                || alignment == TextAnchor.MiddleRight;
+            bool doFromLower = alignment == TextAnchor.LowerCenter
+                               || alignment == TextAnchor.LowerLeft
+                               || alignment == TextAnchor.LowerRight;
+            int maxYPos = 0;
+            int minYPos = 0;
+            List<CharacterInfo> charInfos = new List<CharacterInfo>();
+            string originalText = _text.text;
+            for (int i = 0; i < originalText.Length; i++) {
+                char c = originalText[i];
+                if (doRightToLeft) {
+                    c = originalText[originalText.Length - 1 - i];
+                }
                 CharacterInfo charInfo;
-                _text.font.GetCharacterInfo(_text.text[i], out charInfo, _text.fontSize);
+                _text.font.GetCharacterInfo(c, out charInfo, _text.fontSize);
+                charInfos.Add(charInfo);
                 string newText = "" + c;
                 float pixelsPerUnit = _text.pixelsPerUnit;
                 float advance = charInfo.advance * pixelsPerUnit;
@@ -98,31 +134,67 @@ namespace TheNode.UI {
                 textCmp.font = _text.font;
                 textCmp.fontSize = _text.fontSize;
                 textCmp.color = _text.color;
-                textCmp.alignment = TextAnchor.LowerLeft;
+                textCmp.alignment = _text.alignment;
                 textCmp.verticalOverflow = VerticalWrapMode.Overflow;
                 textCmp.horizontalOverflow = HorizontalWrapMode.Overflow;
                 textCmp.alignByGeometry = true;
                 go.transform.SetParent(transform);
                 RectTransform goTransform = go.GetComponent<RectTransform>();
-                goTransform.sizeDelta = new Vector2(1, 1);
-                goTransform.anchorMin = Vector2.zero;
-                goTransform.anchorMax = Vector2.zero;
-                // goTransform.pivot = Vector2.one * .5f;
-                goTransform.anchoredPosition = new Vector2(xPos, 0);
+
+                RectTransform.Edge edgeH = RectTransform.Edge.Left;
+                if (doRightToLeft) {
+                    edgeH = RectTransform.Edge.Right;
+                }
+
+                float targetXPos = xPos;
+                goTransform.SetInsetAndSizeFromParentEdge(edgeH, targetXPos, charInfo.glyphWidth);
                 goTransform.localScale = Vector3.one;
                 goTransform.localRotation = Quaternion.identity;
                 textCmp.text = newText;
                 newTexts.Add(textCmp);
                 newTransforms.Add(goTransform);
+                maxYPos = Mathf.Max(maxYPos, charInfo.maxY);
+                minYPos = Mathf.Min(minYPos, charInfo.minY);
                 xPos += advance;
             }
 
-            for (int i = _originalText.Length; i < _createdTexts.Count; i++) {
+            RectTransform rt = GetComponent<RectTransform>();
+            for (int i = 0; i < newTransforms.Count; i++) {
+                RectTransform t = newTransforms[i];
+
+                CharacterInfo charInfo = charInfos[i];
+                if (doFromUpper) {
+                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, maxYPos - charInfo.maxY, charInfo.glyphHeight);    
+                } else if (doFromLower) {
+                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, charInfo.minY - minYPos, charInfo.glyphHeight);
+                } else {
+                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, charInfo.minY + rt.rect.height * .5f - maxYPos * .5f - minYPos * .5f, charInfo.glyphHeight);
+                }
+
+                Vector2 tAnchoredPosition = t.anchoredPosition;
+                if (doCenter) {
+                    t.anchoredPosition = new Vector2(tAnchoredPosition.x + rt.rect.width * .5f, tAnchoredPosition.y);
+                }
+                newYPositions.Add(tAnchoredPosition.y);
+            }
+            if (doRightToLeft) {
+                newTexts.Reverse();
+                newTransforms.Reverse();
+                newYPositions.Reverse();
+            } else if (doCenter) {
+                foreach (RectTransform rectTransform in newTransforms) {
+                    Vector2 anchoredPosition = rectTransform.anchoredPosition;
+                    rectTransform.anchoredPosition = new Vector2(anchoredPosition.x - xPos / 2f, anchoredPosition.y);
+                }
+            }
+
+            for (int i = originalText.Length; i < _createdTexts.Count; i++) {
                 DestroyImmediate(_createdTexts[i].gameObject);
             }
 
             _createdTransforms = newTransforms;
             _createdTexts = newTexts;
+            _initialYPositions = newYPositions;
             _text.text = "";
         }
 
@@ -152,13 +224,13 @@ namespace TheNode.UI {
                     float swingY =
                         4 * swingAnimationCurve.Evaluate(
                             (Time.time * animationSpeedSwing + (_createdTexts.Count - i) * .1f) % 1) - 2;
-                    createdText.anchoredPosition =
-                        new Vector2(createdText.anchoredPosition.x,
-                            swingY);
+                    createdText.anchoredPosition = new Vector2(createdText.anchoredPosition.x, _initialYPositions[i] + swingY);
+                } else {
+                    createdText.anchoredPosition = new Vector2(createdText.anchoredPosition.x, _initialYPositions[i]);
                 }
                 if (animateColor) {
                     Text text = _createdTexts[i];
-                    Color rainbowColor = gradient.Evaluate((1 + Mathf.Sin(-Time.time * animationSpeedColor + +i * Mathf.PI / _createdTexts.Count)) / 2f);
+                    Color rainbowColor = gradient.Evaluate((1 + Mathf.Sin(Time.time * animationSpeedColor + i * Mathf.PI / _createdTexts.Count)) / 2f);
                     
                     text.color = Color.Lerp(triggerColor, rainbowColor, colorAnimationCurve.Evaluate( Mathf.Min(distance / _createdTexts.Count, 1)));
                 }
