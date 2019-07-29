@@ -10,6 +10,10 @@ namespace Rhythm.Services {
 		public void PlayOneShot(AudioClip clip, float volume = 1) {
 			_provider.PlayOneShot(clip, volume);
 		}
+
+		public void Stop() {
+			_provider.Stop();
+		}
 		
 		public void Initialize() {
 		}

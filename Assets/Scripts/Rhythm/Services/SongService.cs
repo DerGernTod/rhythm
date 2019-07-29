@@ -22,7 +22,13 @@ namespace Rhythm.Services {
             _knownSongs = new SongDictionary();
             foreach (SongData song in songData) {
                 Debug.Log("Loaded song " + song.name);
-                _songs.Add(song.name, new Song(song.beats, song.name));
+                _songs.Add(song.name, new Song(song.beats, song.name, new [] {
+                    song.streak0Clips,
+                    song.streak1Clips,
+                    song.streak2Clips,
+                    song.streak3Clips,
+                    song.streak4Clips
+                }));
             }
         }
 

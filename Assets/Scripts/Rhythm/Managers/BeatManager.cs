@@ -76,6 +76,7 @@ namespace Rhythm.Managers {
 			overlayFade(0f);
 			_beatInputService.OnNoteHit += OnNoteHit;
 			_beatInputService.OnBeatLost += OnBeatLost;
+			_beatInputService.OnExecutionStarted += OnExecutionStarted;
 			_beatInputService.OnAfterExecutionStarted += OnAfterExecutionStarted;
 			_beatInputService.OnExecutionAborted += OnExecutionAborted;
 			_beatInputService.OnAfterExecutionFinished += OnAfterExecutionFinished;
@@ -92,6 +93,9 @@ namespace Rhythm.Managers {
 			_initialIndicatorPos = songIndicator.transform.position;
 		}
 
+		private void OnExecutionStarted(Song song) {
+		}
+
 		private void OnExecutionAborted(Song obj) {
 			GameObject songTextGo = songIndicator.gameObject;
 			_songIndicatorFadeHashtable["onupdate"] = CreateFadeDelegate(songIndicator);
@@ -103,10 +107,14 @@ namespace Rhythm.Managers {
 			_isExecutingSong = false;
 		}
 
-		private void OnAfterExecutionStarted(Song obj) {
-			songIndicator.text = obj.Name.ToUpper();
+		private void OnAfterExecutionStarted(Song song) {
+			songIndicator.text = song.Name.ToUpper();
 			_beatInputService.OnMetronomeTick += OnMetronomeTickSongIndicator;
 			_isExecutingSong = true;
+			AudioClip[] clips = song.GetClipsByStreakPower(_streakPower);
+			if (clips.Length > 0) {
+				_audioService.PlayOneShot(clips[Random.Range(0, clips.Length)]);
+			}
 		}
 
 		private void OnMetronomeTickSongIndicator() {

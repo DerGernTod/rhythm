@@ -8,16 +8,22 @@ namespace Rhythm.Songs {
         public event Action<NoteQuality, int> CommandExecuted;
         public event Action CommandExecutionFinished;
         public event Action CommandExecutionUpdate;
-        private readonly float[] _beats;
         public string Name { get; }
+        private readonly float[] _beats;
+        private readonly AudioClip[][] _clips;
 
-        public Song(float[] beats, string name) {
+        public Song(float[] beats, string name, AudioClip[][] clips) {
             Name = name;
             if (beats.Any(beat => beat >= 4) || Mathf.Abs(beats[0] - 0) > float.Epsilon) {
-                throw new Exception("A song mustn't be longer than 4 beats and must start at 0!");
+                throw new Exception("A song mustn't be longer than 4 ticks and must start at 0!");
             }
 
+            _clips = clips;
             _beats = beats;
+        }
+
+        public AudioClip[] GetClipsByStreakPower(int streakPower) {
+            return _clips[streakPower];
         }
 
         public bool Contains(float[] beats) {
