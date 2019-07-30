@@ -4,16 +4,34 @@
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 14cbfd051db64a2182dfb8db80ec5107, type: 3}
   m_Name: March
   m_EditorClassIdentifier: 
-  Name: March
-  Beats:
+  beats:
   - 0
   - 1
   - 2
   - 3
+  streak0Clips:
+  - {fileID: 8300000, guid: 59b2a8e6b8ecafe46b0fbd27647946e3, type: 3}
+  - {fileID: 8300000, guid: 9aec431206f07944eaf804fd201fb9d7, type: 3}
+  - {fileID: 8300000, guid: db69b098a35670443b5edf4fa122e9f7, type: 3}
+  streak1Clips:
+  - {fileID: 8300000, guid: 71438f71e8f3c7044ae27a66a197a9ab, type: 3}
+  - {fileID: 8300000, guid: 6132bed57b4a33d44a262fe52f9e9370, type: 3}
+  streak2Clips:
+  - {fileID: 8300000, guid: 4f30d87635685fc4eb27bfb601cc5778, type: 3}
+  - {fileID: 8300000, guid: c623c15b8c6c5a947be868705cb3aff4, type: 3}
+  streak3Clips:
+  - {fileID: 8300000, guid: 3300b2aba7f43bc4c9b5bd1b06afc5a4, type: 3}
+  - {fileID: 8300000, guid: 31a2b6242ee19a548a80a05ce0b1cf9b, type: 3}
+  - {fileID: 8300000, guid: 0b3bfcaa5c1455245945c44805004a5a, type: 3}
+  streak4Clips:
+  - {fileID: 8300000, guid: 0fbfff98a756de34eae3bfe7132af090, type: 3}
+  - {fileID: 8300000, guid: 069a091f6921b3944a9f3ed0782563ea, type: 3}
+  - {fileID: 8300000, guid: 5d0a81434ef0b8247a6af89bbe47d128, type: 3}

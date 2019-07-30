@@ -24,7 +24,7 @@ namespace Rhythm.State {
             Unit drummer = ServiceLocator.Get<UnitService>().CreateUnit("Drummer");
             firstUnit.transform.Translate(Vector3.up * -8);
             drummer.transform.Translate(Vector3.up * -8.25f);
-            ServiceLocator.Get<GameStateService>().GameFinished += OnGameFinished;
+            ServiceLocator.Get<GameStateService>().GameFinishing += OnGameFinishing;
             StartCoroutine(StartGame());
         }
         
@@ -39,18 +39,19 @@ namespace Rhythm.State {
 
             countdownText.text = "Drum!";
             iTween.PunchScale(countdownText.gameObject, Vector3.one * 2f, BeatInputService.HALF_NOTE_TIME);
+            yield return new WaitForSeconds(BeatInputService.HALF_NOTE_TIME);
             ServiceLocator.Get<GameStateService>().TriggerGameStarted();
             yield return new WaitForSeconds(BeatInputService.NOTE_TIME);
             StartCoroutine(Coroutines.FadeTo(countdownText.GetComponent<CanvasGroup>(), 0, BeatInputService.NOTE_TIME));
 
         }
 
-        private void OnGameFinished() {
+        private void OnGameFinishing() {
             Debug.Log("Game finished!");
         }
 
         private void OnDestroy() {
-            ServiceLocator.Get<GameStateService>().GameFinished -= OnGameFinished;
+            ServiceLocator.Get<GameStateService>().GameFinishing -= OnGameFinishing;
         }
     }
 }

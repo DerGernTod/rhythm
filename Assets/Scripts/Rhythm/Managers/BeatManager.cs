@@ -74,13 +74,13 @@ namespace Rhythm.Managers {
 			Action<object> overlayFade = CreateFadeDelegate(beatBlendOverlayImage);
 			_overlayFadeHashtable["onupdate"] = overlayFade;
 			overlayFade(0f);
-			_beatInputService.OnNoteHit += OnNoteHit;
-			_beatInputService.OnBeatLost += OnBeatLost;
-			_beatInputService.OnExecutionStarted += OnExecutionStarted;
-			_beatInputService.OnAfterExecutionStarted += OnAfterExecutionStarted;
-			_beatInputService.OnExecutionAborted += OnExecutionAborted;
-			_beatInputService.OnAfterExecutionFinished += OnAfterExecutionFinished;
-			_gameStateService.GameFinished += OnGameFinished;
+			_beatInputService.NoteHit += NoteHit;
+			_beatInputService.BeatLost += BeatLost;
+			_beatInputService.ExecutionStarting += ExecutionStarting;
+			_beatInputService.ExecutionStarted += ExecutionStarted;
+			_beatInputService.ExecutionAborted += ExecutionAborted;
+			_beatInputService.ExecutionFinished += ExecutionFinished;
+			_gameStateService.GameFinishing += OnGameFinishing;
 			_gameStateService.GameStarted += OnGameStarted;
 			updateClickLocation = () => {
 				if (Input.touches.Length > 0) {
@@ -93,23 +93,23 @@ namespace Rhythm.Managers {
 			_initialIndicatorPos = songIndicator.transform.position;
 		}
 
-		private void OnExecutionStarted(Song song) {
+		private void ExecutionStarting(Song song) {
 		}
 
-		private void OnExecutionAborted(Song obj) {
+		private void ExecutionAborted(Song obj) {
 			GameObject songTextGo = songIndicator.gameObject;
 			_songIndicatorFadeHashtable["onupdate"] = CreateFadeDelegate(songIndicator);
 			songTextGo.transform.position = _initialIndicatorPos;
 			iTween.Stop(songTextGo);
 			iTween.MoveBy(songTextGo, _moveDownHashtable);
 			iTween.ValueTo(songTextGo, _songIndicatorFadeHashtable);
-			_beatInputService.OnMetronomeTick -= OnMetronomeTickSongIndicator;
+			_beatInputService.MetronomeTick -= MetronomeTickSongIndicator;
 			_isExecutingSong = false;
 		}
 
-		private void OnAfterExecutionStarted(Song song) {
+		private void ExecutionStarted(Song song) {
 			songIndicator.text = song.Name.ToUpper();
-			_beatInputService.OnMetronomeTick += OnMetronomeTickSongIndicator;
+			_beatInputService.MetronomeTick += MetronomeTickSongIndicator;
 			_isExecutingSong = true;
 			AudioClip[] clips = song.GetClipsByStreakPower(_streakPower);
 			if (clips.Length > 0) {
@@ -117,7 +117,7 @@ namespace Rhythm.Managers {
 			}
 		}
 
-		private void OnMetronomeTickSongIndicator() {
+		private void MetronomeTickSongIndicator() {
 			GameObject songTextGo = songIndicator.gameObject;
 			songTextGo.transform.position = _initialIndicatorPos;
 			Color c = songIndicator.color;
@@ -127,14 +127,14 @@ namespace Rhythm.Managers {
 			iTween.PunchPosition(songTextGo, Vector3.up * Screen.height / 20f, BeatInputService.NOTE_TIME * .9f);
 		}
 
-		private void OnAfterExecutionFinished(Song obj) {
+		private void ExecutionFinished(Song obj) {
 			GameObject songTextGo = songIndicator.gameObject;
 			_songIndicatorFadeHashtable["onupdate"] = CreateFadeDelegate(songIndicator);
 			songTextGo.transform.position = _initialIndicatorPos;
 			iTween.Stop(songTextGo);
 			iTween.MoveBy(songTextGo, _moveDownHashtable);
 			iTween.ValueTo(songTextGo, _songIndicatorFadeHashtable);
-			_beatInputService.OnMetronomeTick -= OnMetronomeTickSongIndicator;
+			_beatInputService.MetronomeTick -= MetronomeTickSongIndicator;
 			_isExecutingSong = false;
 		}
 
@@ -144,30 +144,30 @@ namespace Rhythm.Managers {
 			_prevStreak = 0;
 			_streakScore = 0;
 			_streakPower = 0;
-			_beatInputService.OnMetronomeTick += OnMetronomeTick;
+			_beatInputService.MetronomeTick += MetronomeTick;
 			streakText.StartAnimation(1 / BeatInputService.NOTE_TIME);
 		}
 		
-		private void OnGameFinished() {
+		private void OnGameFinishing() {
 			_update = Constants.Noop;
 			StartCoroutine(Coroutines.FadeTo(
 				streakText.GetComponent<CanvasGroup>(),
 				0,
 				BeatInputService.HALF_NOTE_TIME));
-			_beatInputService.OnMetronomeTick -= OnMetronomeTick;
+			_beatInputService.MetronomeTick -= MetronomeTick;
 		}
 
 		private void OnDestroy() {
-			_beatInputService.OnNoteHit -= OnNoteHit;
-			_gameStateService.GameFinished -= OnGameFinished;
+			_beatInputService.NoteHit -= NoteHit;
+			_gameStateService.GameFinishing -= OnGameFinishing;
 			_gameStateService.GameStarted -= OnGameStarted;
-			_beatInputService.OnBeatLost -= OnBeatLost;
-			_beatInputService.OnAfterExecutionStarted -= OnAfterExecutionStarted;
-			_beatInputService.OnExecutionAborted -= OnExecutionAborted;
-			_beatInputService.OnAfterExecutionFinished -= OnAfterExecutionFinished;
+			_beatInputService.BeatLost -= BeatLost;
+			_beatInputService.ExecutionStarted -= ExecutionStarted;
+			_beatInputService.ExecutionAborted -= ExecutionAborted;
+			_beatInputService.ExecutionFinished -= ExecutionFinished;
 		}
 
-		private void OnNoteHit(NoteQuality quality, float diff, int streak) {
+		private void NoteHit(NoteQuality quality, float diff, int streak) {
 			updateClickLocation();
 			int score = (int)quality;
 			_streakScore += score;
@@ -197,7 +197,7 @@ namespace Rhythm.Managers {
 			_prevStreak = streak;
 		}
 
-		private void OnBeatLost() {
+		private void BeatLost() {
 			Image hitImage = _beatHitImages[NoteQuality.Miss];
 			_beatHitFadeHashtable["onupdate"] = CreateFadeDelegate(hitImage);
 			GameObject hitImageGo = hitImage.gameObject;
@@ -218,7 +218,7 @@ namespace Rhythm.Managers {
 			_update();
 		}
 
-		private void OnMetronomeTick() {
+		private void MetronomeTick() {
 			_audioService.PlayOneShot(clipBeat, _isExecutingSong ? .15f : 1);
 			iTween.ValueTo(gameObject, _overlayFadeHashtable);
 		}

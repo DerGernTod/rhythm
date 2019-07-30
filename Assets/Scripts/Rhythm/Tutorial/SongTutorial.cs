@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using Rhythm.Data;
 using Rhythm.Services;
 using Rhythm.Songs;
@@ -14,7 +13,7 @@ namespace Rhythm.Tutorial {
 #pragma warning disable 0649
         [SerializeField] private SongData songData;
         [SerializeField] private Image metronomeDiffIndicator;
-        [SerializeField] private RectTransform indicatorLinePrefab; 
+        [SerializeField] private RectTransform indicatorLinePrefab;
 #pragma warning restore 0649
 
         private BeatInputService _beatInputService;
@@ -51,10 +50,10 @@ namespace Rhythm.Tutorial {
 
         private void OnGameStarted() {
             ServiceLocator.Get<PersistenceService>().CurrentPlayer.LearnSong(songData);
-            _beatInputService.OnAfterExecutionStarted += OnAfterExecutionStarted;
-            _beatInputService.OnAfterExecutionFinished += OnAfterExecutionFinished;
-            _beatInputService.OnBeatLost += OnBeatLost;
-            OnBeatLost();
+            _beatInputService.ExecutionStarted += ExecutionStarted;
+            _beatInputService.ExecutionFinished += ExecutionFinished;
+            _beatInputService.BeatLost += BeatLost;
+            BeatLost();
             _update = () => {
                 float metronomeDiff = _beatInputService.MetronomeDiff / BeatInputService.NOTE_TIME;
                 if (_beatInputService.HasBeat && !_hadBeat) {
@@ -91,16 +90,16 @@ namespace Rhythm.Tutorial {
                 StartCoroutine(Coroutines.FadeTo(_canvasGroup, target, BeatInputService.HALF_NOTE_TIME));
         }
 
-        private void OnBeatLost() {
-            _beatInputService.OnNoteHit += OnNoteHit;
+        private void BeatLost() {
+            _beatInputService.NoteHit += NoteHit;
             TriggerFade(0);
         }
 
-        private void OnNoteHit(NoteQuality quality, float arg2, int arg3) {
+        private void NoteHit(NoteQuality quality, float arg2, int arg3) {
             if (quality != NoteQuality.Miss) {
                 ResetBeat();
                 TriggerFade(1);
-                _beatInputService.OnNoteHit -= OnNoteHit;
+                _beatInputService.NoteHit -= NoteHit;
             }
         }
 
@@ -108,11 +107,11 @@ namespace Rhythm.Tutorial {
             _metronomeTick = 0;
         }
 
-        private void OnAfterExecutionFinished(Song obj) {
+        private void ExecutionFinished(Song obj) {
             TriggerFade(1);
         }
 
-        private void OnAfterExecutionStarted(Song song) {
+        private void ExecutionStarted(Song song) {
             TriggerFade(.25f);
         }
 
@@ -120,12 +119,12 @@ namespace Rhythm.Tutorial {
             _update();
         }
         private void OnDestroy() {
-            _beatInputService.OnAfterExecutionStarted -= OnAfterExecutionStarted;
-            _beatInputService.OnAfterExecutionFinished -= OnAfterExecutionFinished;
-            _beatInputService.OnExecutionAborted -= OnAfterExecutionFinished;
+            _beatInputService.ExecutionStarted -= ExecutionStarted;
+            _beatInputService.ExecutionFinished -= ExecutionFinished;
+            _beatInputService.ExecutionAborted -= ExecutionFinished;
             _gameStateService.GameStarted -= OnGameStarted;
-            _beatInputService.OnNoteHit -= OnNoteHit;
-            _beatInputService.OnBeatLost -= OnBeatLost;
+            _beatInputService.NoteHit -= NoteHit;
+            _beatInputService.BeatLost -= BeatLost;
         }
     }
 }

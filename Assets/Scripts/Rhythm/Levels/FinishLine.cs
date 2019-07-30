@@ -34,7 +34,7 @@ namespace Rhythm.Levels {
                 if (unit.Owner == Constants.PLAYER_ID_PLAYER &&
                     unit.GetComponent<Collider2D>().Distance(_collider).isOverlapped) {
                     _update = Constants.Noop;
-                    ServiceLocator.Get<GameStateService>().TriggerGameFinished();
+                    ServiceLocator.Get<GameStateService>().TriggerGameFinishing();
                     return;
                 }
             }

@@ -3,6 +3,7 @@ using Rhythm.Services;
 using Rhythm.Songs;
 using Rhythm.UI;
 using Rhythm.Utils;
+using TheNode.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -17,7 +18,7 @@ namespace Rhythm.Tutorial {
         [SerializeField] private Image mood;
         [SerializeField] private Sprite[] moodSprites;
         [SerializeField] private Sprite[] drumSprites;
-
+        [SerializeField] private AnimatedText songLearnedText;
 #pragma warning restore 0649
         private BeatInputService _beatInputService;
         private bool _moodDirection;
@@ -28,46 +29,47 @@ namespace Rhythm.Tutorial {
         private bool _isExecutingSong;
         private GameStateService _gameStateService;
         private int _drumIndex;
+        private Action _update = Constants.Noop;
         
-        // todo: how to tell user to wait after a full beat for the units to work?
-        // maybe pause? or different sound for main drum, disable drum, different color for border?
-        // timeline with metronome spots marked?
-        // on successful song, indicate pause
         private void Start() {
             _beatInputService = ServiceLocator.Get<BeatInputService>();
             _gameStateService = ServiceLocator.Get<GameStateService>();
+        }
+
+        private void Update() {
+            _update();
         }
 
         public void OnComicPageCompleted(int page) {
             if (page == 1) {
                 _gameStateService.TriggerGameStarted();
                 iTween.ScaleBy(pageToScale.gameObject, Vector3.one * 1.05f, 5);
-                _beatInputService.OnMetronomeTick += PunchDrum;
-                _beatInputService.OnNoteHit += OnNoteHit;
-                _beatInputService.OnBeatLost += OnBeatLost;
-                _beatInputService.OnAfterExecutionStarted += OnAfterExecutionStarted;
-                _beatInputService.OnAfterExecutionFinished += OnAfterExecutionFinished;
-                _beatInputService.OnExecutionAborted += OnAfterExecutionFinished;
+                _beatInputService.MetronomeTick += OnMetronomeTick;
+                _beatInputService.NoteHit += OnNoteHit;
+                _beatInputService.BeatLost += OnBeatLost;
+                _beatInputService.ExecutionStarted += OnExecutionStarted;
+                _beatInputService.ExecutionFinished += OnExecutionFinished;
+                _beatInputService.ExecutionAborted += OnExecutionFinished;
             }
         }
 
-        private void OnMetronomeTick() {
+        private void MetronomeTick() {
             iTween.PunchPosition(mood.gameObject, Vector2.up * 10, BeatInputService.NOTE_TIME * .9f);
             if (_drumIndex >= 0) {
                 drum.sprite = drumSprites[_drumIndex--];
             }
         }
 
-        private void OnAfterExecutionStarted(Song song) {
+        private void OnExecutionStarted(Song song) {
             _isExecutingSong = true;
             _drumIndex = 3;
-            _beatInputService.OnMetronomeTick += OnMetronomeTick;
+            _beatInputService.MetronomeTick += MetronomeTick;
             
         }
 
-        private void OnAfterExecutionFinished(Song song) {
+        private void OnExecutionFinished(Song song) {
             _isExecutingSong = false;
-            _beatInputService.OnMetronomeTick -= OnMetronomeTick;
+            _beatInputService.MetronomeTick -= MetronomeTick;
             
         }
 
@@ -103,8 +105,19 @@ namespace Rhythm.Tutorial {
 
         private void FinishTutorial() {
             OnDestroy();
-            _gameStateService.TriggerGameFinished();
-            SceneManager.LoadScene("IngameScene");
+            _gameStateService.TriggerGameFinishing();
+            StartCoroutine(Coroutines.FadeTo(songLearnedText.GetComponent<CanvasGroup>(), 1, .25f));
+            songLearnedText.StartAnimation();
+            songLearnedText.TriggerImpulse();
+            StartCoroutine(Coroutines.ExecuteAfterSeconds(1.5f, () => {
+                _update = () => {
+                    if (Input.GetMouseButtonDown(0)) {
+                        _update = Constants.Noop;
+                        _gameStateService.TriggerSceneTransition("IngameScene");
+                    }
+                };
+            }));
+            
         }
         
         private void SetMoodSpriteIndex(int index) {
@@ -113,15 +126,15 @@ namespace Rhythm.Tutorial {
         }
 
         private void OnDestroy() {
-            _beatInputService.OnMetronomeTick -= PunchDrum;
-            _beatInputService.OnNoteHit -= OnNoteHit;
-            _beatInputService.OnBeatLost -= OnBeatLost;
-            _beatInputService.OnAfterExecutionStarted -= OnAfterExecutionStarted;
-            _beatInputService.OnAfterExecutionFinished -= OnAfterExecutionFinished;
-            _beatInputService.OnExecutionAborted -= OnAfterExecutionFinished;
+            _beatInputService.MetronomeTick -= OnMetronomeTick;
+            _beatInputService.NoteHit -= OnNoteHit;
+            _beatInputService.BeatLost -= OnBeatLost;
+            _beatInputService.ExecutionStarted -= OnExecutionStarted;
+            _beatInputService.ExecutionFinished -= OnExecutionFinished;
+            _beatInputService.ExecutionAborted -= OnExecutionFinished;
         }
 
-        private void PunchDrum() {
+        private void OnMetronomeTick() {
             if (!_isExecutingSong) {
                 iTween.PunchScale(drum.gameObject, Vector2.one * .25f, BeatInputService.NOTE_TIME * .9f);
                 iTween.PunchRotation(drum.gameObject, 15f * (2 * Random.value - 1) * Vector3.forward,

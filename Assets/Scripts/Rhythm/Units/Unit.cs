@@ -55,8 +55,8 @@ namespace Rhythm.Units {
 				song.CommandExecutionUpdate += _updates[i];
 			}
 			
-			ServiceLocator.Get<BeatInputService>().OnBeatLost += OnBeatLost;
-			ServiceLocator.Get<BeatInputService>().OnExecutionFinished += OnExecutionFinished;
+			ServiceLocator.Get<BeatInputService>().BeatLost += BeatLost;
+			ServiceLocator.Get<BeatInputService>().ExecutionFinishing += ExecutionFinishing;
 		}
 
 		private void Update() {
@@ -72,15 +72,15 @@ namespace Rhythm.Units {
 				song.CommandExecutionFinished -= _finishes[i];
 				song.CommandExecutionUpdate -= _updates[i];
 			}
-			ServiceLocator.Get<BeatInputService>().OnBeatLost -= OnBeatLost;
-			ServiceLocator.Get<BeatInputService>().OnExecutionFinished -= OnExecutionFinished;
+			ServiceLocator.Get<BeatInputService>().BeatLost -= BeatLost;
+			ServiceLocator.Get<BeatInputService>().ExecutionFinishing -= ExecutionFinishing;
 		}
 
-		private void OnBeatLost() {
+		private void BeatLost() {
 			_updateFunc = DropUpdate;
 		}
 
-		private void OnExecutionFinished(Song song) {
+		private void ExecutionFinishing(Song song) {
 			_updateFunc = Constants.Noop;
 		}
 		

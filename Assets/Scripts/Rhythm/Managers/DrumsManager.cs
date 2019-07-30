@@ -21,20 +21,20 @@ namespace Rhythm.Managers {
                 {NoteQuality.Perfect, perfectClip}
             };
             _beatInputService = ServiceLocator.Get<BeatInputService>();
-            _beatInputService.OnNoteHit += OnNoteHit;
-            _beatInputService.OnBeatLost += OnBeatLost;
+            _beatInputService.NoteHit += NoteHit;
+            _beatInputService.BeatLost += BeatLost;
         }
 
         private void OnDestroy() {
-            _beatInputService.OnNoteHit -= OnNoteHit;
-            _beatInputService.OnBeatLost -= OnBeatLost;
+            _beatInputService.NoteHit -= NoteHit;
+            _beatInputService.BeatLost -= BeatLost;
         }
 
-        private void OnBeatLost() {
+        private void BeatLost() {
             ServiceLocator.Get<AudioService>().PlayOneShot(clips[NoteQuality.Miss]);
         }
         
-        private void OnNoteHit(NoteQuality quality, float diff, int streak) {
+        private void NoteHit(NoteQuality quality, float diff, int streak) {
             ServiceLocator.Get<AudioService>().PlayOneShot(clips[quality]);
         }
     }

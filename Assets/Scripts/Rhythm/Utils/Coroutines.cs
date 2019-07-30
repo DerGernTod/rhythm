@@ -17,7 +17,7 @@ namespace Rhythm.Utils {
             canvasGroup.alpha = fadeIn ? 1 : 0;
         }
 
-        public static IEnumerator FadeTo(CanvasGroup canvas, float target, float time) {
+        public static IEnumerator FadeTo(CanvasGroup canvas, float target, float time, Action onFinished = null) {
             float stepPerSec = (target - canvas.alpha) / time;
             while (Math.Abs(target - canvas.alpha) > Single.Epsilon) {
                 float currentRest = target - canvas.alpha;
@@ -29,6 +29,7 @@ namespace Rhythm.Utils {
                 yield return null;
             }
             canvas.alpha = target;
+            onFinished?.Invoke();
         }
     }
 }

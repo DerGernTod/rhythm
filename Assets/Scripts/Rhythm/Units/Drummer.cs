@@ -11,16 +11,16 @@ namespace Rhythm.Units {
 
 		private void Awake() {
 			_animator = GetComponent<Animator>();
-			ServiceLocator.Get<BeatInputService>().OnNoteHit += OnNoteHit;
+			ServiceLocator.Get<BeatInputService>().NoteHit += NoteHit;
 		}
 
-		private void OnNoteHit(NoteQuality arg1, float diff, int streak) {
+		private void NoteHit(NoteQuality arg1, float diff, int streak) {
 			_animator.SetTrigger(nextAnim);
 			nextAnim = nextAnim == LeftPerfect ? RightPerfect : LeftPerfect;
 		}
 
 		private void OnDestroy() {
-			ServiceLocator.Get<BeatInputService>().OnNoteHit -= OnNoteHit;
+			ServiceLocator.Get<BeatInputService>().NoteHit -= NoteHit;
 		}
 	}
 }

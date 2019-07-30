@@ -7,14 +7,14 @@ using UnityEngine;
 namespace Rhythm.Services {
     [Serializable]
     public class BeatInputService : IUpdateableService {
-        public event Action OnBeatLost;
-        public event Action<NoteQuality, float, int> OnNoteHit;
-        public event Action<Song> OnExecutionStarted;
-        public event Action<Song> OnAfterExecutionStarted;
-        public event Action<Song> OnExecutionAborted;
-        public event Action<Song> OnExecutionFinished;
-        public event Action<Song> OnAfterExecutionFinished;
-        public event Action OnMetronomeTick;
+        public event Action BeatLost;
+        public event Action<NoteQuality, float, int> NoteHit;
+        public event Action<Song> ExecutionStarting;
+        public event Action<Song> ExecutionStarted;
+        public event Action<Song> ExecutionAborted;
+        public event Action<Song> ExecutionFinishing;
+        public event Action<Song> ExecutionFinished;
+        public event Action MetronomeTick;
         public const float FAIL_TOLERANCE = .10f;
         public const float NOTE_TIME = .75f;
         public const float HALF_NOTE_TIME = NOTE_TIME / 2f;
@@ -53,10 +53,10 @@ namespace Rhythm.Services {
         
         public void Initialize() {
             #if UNITY_EDITOR
-            OnNoteHit += (quality, diff, streak) => Debug.Log("Beat hit: " + quality + " - diff: " + diff + " - streak: " + streak);
-            OnBeatLost += () => Debug.Log("Beat lost...");
-            OnExecutionStarted += song => Debug.Log("Executing song " + song.Name);
-            OnExecutionFinished += song => Debug.Log("Finished executing song " + song.Name);
+            NoteHit += (quality, diff, streak) => Debug.Log("Beat hit: " + quality + " - diff: " + diff + " - streak: " + streak);
+            BeatLost += () => Debug.Log("Beat lost...");
+            ExecutionStarting += song => Debug.Log("Executing song " + song.Name);
+            ExecutionFinishing += song => Debug.Log("Finished executing song " + song.Name);
             #endif
             // _update = BeatInputUpdate;
         }
@@ -66,7 +66,7 @@ namespace Rhythm.Services {
             _gameStateService = ServiceLocator.Get<GameStateService>();
             _currentBeatStartTimeAbs = (float) AudioSettings.dspTime;
             _currentBeatRunTime = 0;
-            _gameStateService.GameFinished += Cleanup;
+            _gameStateService.GameFinishing += Cleanup;
             _gameStateService.GameStarted += OnGameStarted;
         }
 
@@ -101,7 +101,7 @@ namespace Rhythm.Services {
 
         public void Destroy() {
             Cleanup();
-            _gameStateService.GameFinished -= Cleanup;
+            _gameStateService.GameFinishing -= Cleanup;
             _gameStateService.GameStarted -= OnGameStarted;
         }
 
@@ -123,7 +123,7 @@ namespace Rhythm.Services {
                 && dspTime - _lastMetronomeTickAbsolute >= QUARTER_NOTE_TIME) {
                 if (_tickMetronome) {
                     _lastMetronomeFullTickTime = RoundToMetronome(dspTime);
-                    OnMetronomeTick?.Invoke();
+                    MetronomeTick?.Invoke();
                 }
 
                 _tickMetronome = !_tickMetronome;
@@ -184,9 +184,9 @@ namespace Rhythm.Services {
         }
 
         private void HandleBeatLost() {
-            OnBeatLost?.Invoke();
+            BeatLost?.Invoke();
             if (_currentSong != null) {
-                OnExecutionAborted?.Invoke(_currentSong);
+                ExecutionAborted?.Invoke(_currentSong);
                 _currentSong = null;
             }
             _numSuccessfulBeats = 0;
@@ -200,10 +200,10 @@ namespace Rhythm.Services {
             _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(time, () => {
                 if (_currentSong != null) {
                     _currentSong.FinishCommandExecution();
-                    OnExecutionFinished?.Invoke(_currentSong);
+                    ExecutionFinishing?.Invoke(_currentSong);
                     Song activeSong = _currentSong;
                     _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(HALF_NOTE_TIME, () => {
-                        OnAfterExecutionFinished?.Invoke(activeSong);
+                        ExecutionFinished?.Invoke(activeSong);
                         EnableTouchHandler();
                     }));
                 }
@@ -245,7 +245,7 @@ namespace Rhythm.Services {
                 hitNoteQuality = NoteQuality.Miss;
                 Debug.Log("No songs detected with that beat! Current beat was " + string.Join("-", _currentNotes));
             }
-            OnNoteHit?.Invoke(hitNoteQuality, noteTimeDiff, _numSuccessfulBeats);
+            NoteHit?.Invoke(hitNoteQuality, noteTimeDiff, _numSuccessfulBeats);
             if (hitNoteQuality == NoteQuality.Miss) {
                 HandleBeatLost();
             }
@@ -280,7 +280,7 @@ namespace Rhythm.Services {
 
         private void ExecuteSong(NoteQuality hitNoteQuality, float beatTimeDiff, Song matchingSong) {
             _numSuccessfulBeats++;
-            OnNoteHit?.Invoke(hitNoteQuality, beatTimeDiff, _numSuccessfulBeats);
+            NoteHit?.Invoke(hitNoteQuality, beatTimeDiff, _numSuccessfulBeats);
             if (_beatInputHandler == Constants.Noop) {
                 // don't execute song if game has been finished with the last note
                 return;
@@ -288,10 +288,10 @@ namespace Rhythm.Services {
             _currentSong = matchingSong;
             _currentSong.ExecuteCommand(hitNoteQuality, _numSuccessfulBeats);
             _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(HALF_NOTE_TIME, () => {
-                OnAfterExecutionStarted?.Invoke(matchingSong);
+                ExecutionStarted?.Invoke(matchingSong);
                 DisableTouchHandler();
             }));
-            OnExecutionStarted?.Invoke(_currentSong);
+            ExecutionStarting?.Invoke(_currentSong);
             _currentCommandUpdate = _currentSong.ExecuteCommandUpdate;
             ResetBeatAfterSeconds(NOTE_TIME * 4);
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rhythm.Services;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -76,7 +77,7 @@ namespace TheNode.UI {
             _createdTexts.RemoveAt(indexOfSelf);
         }
 
-        public void StartAnimation(float swingSpeed) {
+        public void StartAnimation(float swingSpeed = 1 / BeatInputService.NOTE_TIME) {
             animationSpeedSwing = swingSpeed;
             animateColor = true;
             animatePosition = true;
@@ -135,8 +136,8 @@ namespace TheNode.UI {
                 textCmp.fontSize = _text.fontSize;
                 textCmp.color = _text.color;
                 textCmp.alignment = _text.alignment;
-                textCmp.verticalOverflow = VerticalWrapMode.Overflow;
-                textCmp.horizontalOverflow = HorizontalWrapMode.Overflow;
+                textCmp.verticalOverflow = VerticalWrapMode.Truncate;
+                textCmp.horizontalOverflow = HorizontalWrapMode.Wrap;
                 textCmp.alignByGeometry = true;
                 go.transform.SetParent(transform);
                 RectTransform goTransform = go.GetComponent<RectTransform>();
@@ -161,31 +162,43 @@ namespace TheNode.UI {
             RectTransform rt = GetComponent<RectTransform>();
             for (int i = 0; i < newTransforms.Count; i++) {
                 RectTransform t = newTransforms[i];
+                Rect parentRect = rt.rect;
 
                 CharacterInfo charInfo = charInfos[i];
                 if (doFromUpper) {
-                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, maxYPos - charInfo.maxY, charInfo.glyphHeight);    
+                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, -parentRect.height + maxYPos - charInfo.minY, charInfo.glyphHeight);    
                 } else if (doFromLower) {
-                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, charInfo.minY - minYPos, charInfo.glyphHeight);
+                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, charInfo.minY + minYPos + maxYPos, charInfo.glyphHeight);
                 } else {
-                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, charInfo.minY + rt.rect.height * .5f - maxYPos * .5f - minYPos * .5f, charInfo.glyphHeight);
+                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, charInfo.minY + (parentRect.height - maxYPos - minYPos) * .5f, charInfo.glyphHeight);
                 }
 
-                Vector2 tAnchoredPosition = t.anchoredPosition;
+                RectTransform rectTransform = newTransforms[i];
+                
                 if (doCenter) {
-                    t.anchoredPosition = new Vector2(tAnchoredPosition.x + rt.rect.width * .5f, tAnchoredPosition.y);
+                    rectTransform.anchoredPosition += (parentRect.width - xPos) * .5f * Vector2.right;
+                } else if (doRightToLeft) {
+                    rectTransform.anchoredPosition += parentRect.width * .5f * Vector2.right;
+                } else {
+                    rectTransform.anchoredPosition -= parentRect.width * .5f * Vector2.right;
                 }
-                newYPositions.Add(tAnchoredPosition.y);
+                Vector2 anchoredPosition = rectTransform.anchoredPosition;
+                Vector2 halfGlyphSize = new Vector2(charInfo.glyphWidth, charInfo.glyphHeight);
+                Vector2 rectSize = new Vector2(parentRect.width, parentRect.height);
+                rectTransform.anchorMax = (anchoredPosition + halfGlyphSize) / rectSize;
+                rectTransform.anchorMin = (anchoredPosition - halfGlyphSize) / rectSize;
+                rectTransform.offsetMax = Vector2.zero;
+                rectTransform.offsetMin = Vector2.zero;
+                newYPositions.Add(rectTransform.anchoredPosition.y);
+                Text textCmp = newTexts[i];
+                textCmp.resizeTextForBestFit = _text.resizeTextForBestFit;
+                textCmp.resizeTextMaxSize = _text.resizeTextMaxSize;
+                textCmp.resizeTextMinSize = _text.resizeTextMinSize;
             }
             if (doRightToLeft) {
                 newTexts.Reverse();
                 newTransforms.Reverse();
                 newYPositions.Reverse();
-            } else if (doCenter) {
-                foreach (RectTransform rectTransform in newTransforms) {
-                    Vector2 anchoredPosition = rectTransform.anchoredPosition;
-                    rectTransform.anchoredPosition = new Vector2(anchoredPosition.x - xPos / 2f, anchoredPosition.y);
-                }
             }
 
             for (int i = originalText.Length; i < _createdTexts.Count; i++) {
@@ -235,7 +248,7 @@ namespace TheNode.UI {
                     text.color = Color.Lerp(triggerColor, rainbowColor, colorAnimationCurve.Evaluate( Mathf.Min(distance / _createdTexts.Count, 1)));
                 }
 
-                createdText.localScale = Vector2.one + Mathf.Min(1 / distance, 2) * Vector2.one;
+                createdText.localScale = Vector3.one + Mathf.Min(1 / distance, 2) * Vector3.one;
             }
 
             _highlightIndex += Mathf.Min(Time.deltaTime * animationSpeedImpulse * 5, _createdTexts.Count * 2);
