@@ -230,7 +230,7 @@ namespace Rhythm.Services {
             NoteQuality hitNoteQuality = CalcNoteQuality(noteTimeDiff);
 
             if (hitNoteQuality != NoteQuality.Miss) {
-                _currentNotes.Add(Mathf.RoundToInt((float) _currentBeatRunTime / NOTE_TIME));
+                _currentNotes.Add(Mathf.RoundToInt((float) _currentBeatRunTime / HALF_NOTE_TIME) * .5f);
             }
 
             HasBeat = true;
