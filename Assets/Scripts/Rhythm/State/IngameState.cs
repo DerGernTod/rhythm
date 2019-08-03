@@ -4,6 +4,7 @@ using Rhythm.Managers;
 using Rhythm.Services;
 using Rhythm.Units;
 using Rhythm.Utils;
+using TheNode.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +14,7 @@ namespace Rhythm.State {
 #pragma warning disable 0649
         [SerializeField] private LevelData levelData;
         [SerializeField] private Text countdownText;
+        [SerializeField] private AnimatedText finishText;
 #pragma warning restore 0649
         private void Start() {
             LoopingBackground background = new GameObject("Looping Background").AddComponent<LoopingBackground>();
@@ -47,7 +49,9 @@ namespace Rhythm.State {
         }
 
         private void OnGameFinishing() {
-            Debug.Log("Game finished!");
+            StartCoroutine(Coroutines.FadeTo(finishText.GetComponent<CanvasGroup>(), 1, BeatInputService.NOTE_TIME));
+            iTween.MoveFrom(finishText.gameObject, new Vector3(Screen.width * .5f, Screen.height * .5f, 0), 1);
+            finishText.TriggerImpulse();
         }
 
         private void OnDestroy() {

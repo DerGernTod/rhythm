@@ -145,7 +145,7 @@ namespace Rhythm.Managers {
 			_streakScore = 0;
 			_streakPower = 0;
 			_beatInputService.MetronomeTick += MetronomeTick;
-			streakText.StartAnimation(1 / BeatInputService.NOTE_TIME);
+			streakText.StartAnimation();
 		}
 		
 		private void OnGameFinishing() {
@@ -155,6 +155,10 @@ namespace Rhythm.Managers {
 				0,
 				BeatInputService.HALF_NOTE_TIME));
 			_beatInputService.MetronomeTick -= MetronomeTick;
+			StartCoroutine(Coroutines.FadeTo(
+				songIndicator.GetComponent<CanvasGroup>(),
+				0,
+				BeatInputService.HALF_NOTE_TIME));
 		}
 
 		private void OnDestroy() {

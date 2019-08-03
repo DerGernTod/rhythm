@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Rhythm.Services;
 using UnityEditor;
 using UnityEngine;
@@ -92,19 +91,6 @@ namespace TheNode.UI {
             bool doRightToLeft = alignment == TextAnchor.UpperRight
                      || alignment == TextAnchor.MiddleRight
                      || alignment == TextAnchor.LowerRight;
-            bool doCenter = alignment == TextAnchor.LowerCenter
-                            || alignment == TextAnchor.MiddleCenter
-                            || alignment == TextAnchor.UpperCenter;
-            
-            bool doFromUpper = alignment == TextAnchor.UpperCenter
-                               || alignment == TextAnchor.UpperLeft
-                               || alignment == TextAnchor.UpperRight;
-            bool doFromMiddle = alignment == TextAnchor.MiddleCenter
-                                || alignment == TextAnchor.MiddleLeft
-                                || alignment == TextAnchor.MiddleRight;
-            bool doFromLower = alignment == TextAnchor.LowerCenter
-                               || alignment == TextAnchor.LowerLeft
-                               || alignment == TextAnchor.LowerRight;
             int maxYPos = 0;
             int minYPos = 0;
             List<CharacterInfo> charInfos = new List<CharacterInfo>();
@@ -155,62 +141,7 @@ namespace TheNode.UI {
                 xOffsets.Add(xPos);
             }
 
-            RectTransform rt = GetComponent<RectTransform>();
-            Rect parentRect = rt.rect;
-            int smallestFontSize = 999;
-            for (int i = 0; i < newTransforms.Count; i++) {
-                RectTransform t = newTransforms[i];
-                CharacterInfo charInfo = charInfos[i];
-                Vector2 glyphSize = new Vector2(
-                    charInfo.maxX - charInfo.minX,
-                    charInfo.maxY - charInfo.minY);
-                Vector2 pivot = Vector2.zero;
-                Vector2 targetPos = Vector2.zero;
-                RectTransform.Edge verticalEdge = RectTransform.Edge.Bottom;
-                RectTransform.Edge horizontalEdge = RectTransform.Edge.Left;
-                
-                // vertical
-                if (doFromUpper) {
-                    pivot.y = 1;
-                    targetPos.y = -charInfo.maxY - minYPos;
-                    verticalEdge = RectTransform.Edge.Top;
-                } else if (doFromLower) {
-                    targetPos.y = charInfo.maxY;
-                } else {
-                    pivot.y = .5f;
-                    targetPos.y = charInfo.minY + glyphSize.y * .5f;
-                }
-                
-                //horizontal
-                float curOffset = xOffsets[i];
-                if (doCenter) {
-                    pivot.x = .5f;
-                    targetPos.x = curOffset + (parentRect.width - xPos - glyphSize.x) * .5f;
-                } else if (doRightToLeft) {
-                    pivot.x = 1f;
-                    horizontalEdge = RectTransform.Edge.Right;
-                    targetPos.x = curOffset - parentRect.width;
-                } else {
-                    targetPos.x = curOffset;
-                }
-
-                t.pivot = pivot;
-                t.SetInsetAndSizeFromParentEdge(horizontalEdge, targetPos.x, glyphSize.x);
-                t.SetInsetAndSizeFromParentEdge(verticalEdge, targetPos.y, glyphSize.y);
-
-                Vector2 anchoredPosition = t.anchoredPosition;
-                Vector2 rectSize = new Vector2(parentRect.width, parentRect.height);
-                t.anchorMax = (anchoredPosition + glyphSize) / rectSize;
-                t.anchorMin = (anchoredPosition - glyphSize) / rectSize;
-                t.offsetMax = Vector2.zero;
-                t.offsetMin = Vector2.zero;
-                newYPositions.Add(t.anchoredPosition.y);
-                // TODO: uncomment this when size problem is resolved
-                Text textCmp = newTexts[i];
-                textCmp.resizeTextForBestFit = _text.resizeTextForBestFit;
-                textCmp.resizeTextMaxSize = _text.resizeTextMaxSize;
-                textCmp.resizeTextMinSize = _text.resizeTextMinSize;
-            }
+            Align(newTransforms, charInfos, minYPos, maxYPos, xOffsets, xPos, doRightToLeft, newYPositions, newTexts);
             if (doRightToLeft) {
                 newTexts.Reverse();
                 newTransforms.Reverse();
@@ -225,6 +156,75 @@ namespace TheNode.UI {
             _createdTexts = newTexts;
             _initialYPositions = newYPositions;
             _text.text = "";
+        }
+
+        private void Align(List<RectTransform> newTransforms,
+                List<CharacterInfo> charInfos, int minYPos, int maxYPos,
+                List<float> xOffsets, float xPos, bool doRightToLeft,
+                List<float> newYPositions, List<Text> newTexts) {
+            RectTransform rt = GetComponent<RectTransform>();
+            Rect parentRect = rt.rect;
+            TextAnchor alignment = _text.alignment;
+            bool doFromUpper = alignment == TextAnchor.UpperCenter
+                               || alignment == TextAnchor.UpperLeft
+                               || alignment == TextAnchor.UpperRight;
+            bool doFromLower = alignment == TextAnchor.LowerCenter
+                               || alignment == TextAnchor.LowerLeft
+                               || alignment == TextAnchor.LowerRight;
+            bool doCenter = alignment == TextAnchor.LowerCenter
+                            || alignment == TextAnchor.MiddleCenter
+                            || alignment == TextAnchor.UpperCenter;
+            Vector2 parentRectSize = new Vector2(parentRect.width, parentRect.height);
+            for (int i = 0; i < newTransforms.Count; i++) {
+                RectTransform t = newTransforms[i];
+                CharacterInfo charInfo = charInfos[i];
+                Vector2 glyphSize = new Vector2(
+                    charInfo.maxX - charInfo.minX,
+                    charInfo.maxY - charInfo.minY);
+                Vector2 pivot = Vector2.zero;
+                Vector2 targetPos = Vector2.zero;
+                RectTransform.Edge horizontalEdge = RectTransform.Edge.Left;
+
+                // vertical
+                if (doFromUpper) {
+                    pivot.y = 0;
+                    targetPos.y = parentRectSize.y - maxYPos;
+                } else if (doFromLower) {
+                    targetPos.y = charInfo.maxY;
+                } else {
+                    pivot.y = .5f;
+                    targetPos.y = parentRectSize.y * .5f + charInfo.minY + glyphSize.y * .5f - maxYPos;
+                }
+
+                //horizontal
+                float curOffset = xOffsets[i];
+                if (doCenter) {
+                    pivot.x = 0;
+                    targetPos.x = curOffset + (parentRect.width - xPos - glyphSize.x) * .5f;
+                } else if (doRightToLeft) {
+                    pivot.x = 1f;
+                    horizontalEdge = RectTransform.Edge.Right;
+                    targetPos.x = curOffset - parentRect.width;
+                } else {
+                    targetPos.x = curOffset;
+                }
+
+                t.pivot = pivot;
+                t.SetInsetAndSizeFromParentEdge(horizontalEdge, targetPos.x, glyphSize.x);
+                t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, targetPos.y, glyphSize.y);
+                t.ForceUpdateRectTransforms();
+                Vector2 anchoredPosition = t.anchoredPosition;
+                t.anchorMax = (anchoredPosition + glyphSize) / parentRectSize;
+                t.anchorMin = (anchoredPosition - glyphSize) / parentRectSize;
+                t.offsetMax = Vector2.zero;
+                t.offsetMin = Vector2.zero;
+                newYPositions.Add(t.anchoredPosition.y);
+                // TODO: uncomment this when size problem is resolved
+                Text textCmp = newTexts[i];
+                textCmp.resizeTextForBestFit = _text.resizeTextForBestFit;
+                textCmp.resizeTextMaxSize = _text.resizeTextMaxSize;
+                textCmp.resizeTextMinSize = _text.resizeTextMinSize;
+            }
         }
 
         public void TriggerImpulse() {

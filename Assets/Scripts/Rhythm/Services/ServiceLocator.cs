@@ -34,7 +34,7 @@ namespace Rhythm.Services {
         }
 
         private void Start() {
-            SceneManager.LoadScene("Intro");
+            SceneManager.LoadScene("IngameScene");
         }
 
         private void Update() {

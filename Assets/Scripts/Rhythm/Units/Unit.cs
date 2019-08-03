@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Rhythm.Commands;
 using Rhythm.Data;
 using Rhythm.Services;
@@ -7,7 +8,6 @@ using Rhythm.Utils;
 using UnityEngine;
 
 namespace Rhythm.Units {
-	// [RequireComponent(typeof(Collider2D))]
 	public class Unit : MonoBehaviour {
 		private static int ids;
 		
@@ -24,7 +24,9 @@ namespace Rhythm.Units {
 		private Action<NoteQuality, int>[] _executions;
 		private Action[] _finishes;
 		private Action[] _updates;
-		
+		private BeatInputService _beatInputService;
+		private GameStateService _gameStateService;
+
 		private void Awake() {
 			_updateFunc = Constants.Noop;
 		}
@@ -54,9 +56,23 @@ namespace Rhythm.Units {
 				song.CommandExecutionFinished += _finishes[i];
 				song.CommandExecutionUpdate += _updates[i];
 			}
-			
-			ServiceLocator.Get<BeatInputService>().BeatLost += BeatLost;
-			ServiceLocator.Get<BeatInputService>().ExecutionFinishing += ExecutionFinishing;
+
+			_beatInputService = ServiceLocator.Get<BeatInputService>();
+			_beatInputService.BeatLost += BeatLost;
+			_beatInputService.ExecutionFinishing += ExecutionFinishing;
+			_gameStateService = ServiceLocator.Get<GameStateService>();
+			_gameStateService.GameFinishing += OnGameFinishing;
+		}
+
+		private void OnGameFinishing() {
+			StartCoroutine(WalkThroughFinishLine());
+		}
+
+		private IEnumerator WalkThroughFinishLine() {
+			while (true) {
+				transform.Translate(MovementSpeed * Time.deltaTime * Vector2.up);
+				yield return null;
+			}
 		}
 
 		private void Update() {
@@ -72,8 +88,10 @@ namespace Rhythm.Units {
 				song.CommandExecutionFinished -= _finishes[i];
 				song.CommandExecutionUpdate -= _updates[i];
 			}
-			ServiceLocator.Get<BeatInputService>().BeatLost -= BeatLost;
-			ServiceLocator.Get<BeatInputService>().ExecutionFinishing -= ExecutionFinishing;
+			_beatInputService.BeatLost -= BeatLost;
+			_beatInputService.ExecutionFinishing -= ExecutionFinishing;
+			_gameStateService.GameFinishing -= OnGameFinishing;
+			StopAllCoroutines();
 		}
 
 		private void BeatLost() {
@@ -85,7 +103,7 @@ namespace Rhythm.Units {
 		}
 		
 		private void DropUpdate() {
-			
+			Debug.Log("Unit drops down!");
 		}
 	}
 }

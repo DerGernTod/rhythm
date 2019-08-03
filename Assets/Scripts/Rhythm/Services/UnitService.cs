@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rhythm.Data;
 using Rhythm.Units;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace Rhythm.Services {
 	public class UnitService : IService {
@@ -21,6 +24,15 @@ namespace Rhythm.Services {
 		}
 
 		public void PostInitialize() {
+			ServiceLocator.Get<GameStateService>().SceneTransitionStarted += OnSceneTransitionStarted;
+			SceneManager.activeSceneChanged += (from, to) => OnSceneTransitionStarted(from.name, to.name);
+		}
+
+		private void OnSceneTransitionStarted(string from, string to) {
+			foreach (KeyValuePair<int,Unit> createdUnit in _createdUnits) {
+				UnitDestroyed?.Invoke(createdUnit.Value);
+			}
+			_createdUnits.Clear();
 		}
 
 		public void Destroy() {
@@ -35,8 +47,7 @@ namespace Rhythm.Services {
 				                    "Create a corresponding UnitData first.");
 			}
 
-			Unit unit = GameObject.Instantiate(unitData.prefab);
-			GameObject g = new GameObject(name);
+			Unit unit = Object.Instantiate(unitData.prefab);
 			_createdUnits.Add(unit.GetInstanceID(), unit);
 			UnitCreated?.Invoke(unit);
 			unit.Initialize(unitData);
@@ -53,8 +64,8 @@ namespace Rhythm.Services {
 			UnitDestroyed?.Invoke(unit);
 		}
 
-		public Dictionary<int, Unit>.ValueCollection GetAllUnits() {
-			return _createdUnits.Values;
+		public List<Unit> GetAllUnits() {
+			return _createdUnits.Values.ToList();
 		}
 	}
 }
