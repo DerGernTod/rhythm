@@ -5,19 +5,20 @@ using Rhythm.Data;
 namespace Rhythm.Persistence {
     [Serializable]
     public class PlayerStore {
-        public event Action<SongData> OnSongLearned;
-        public List<SongData> KnownSongs { get; private set; }
-        public string Name { get; private set; }
+        [field:NonSerialized]
+        public event Action<string> OnSongLearned;
+        public List<string> KnownSongs { get; }
+        public string Name { get; }
 
         public PlayerStore(string name) {
             Name = name;
-            KnownSongs = new List<SongData>();
+            KnownSongs = new List<string>();
         }
 
-        public void LearnSong(SongData song) {
-            if (!KnownSongs.Contains(song)) {
-                KnownSongs.Add(song);
-                OnSongLearned?.Invoke(song);
+        public void LearnSong(string songName) {
+            if (!KnownSongs.Contains(songName)) {
+                KnownSongs.Add(songName);
+                OnSongLearned?.Invoke(songName);
             }
         }
     }

@@ -17,7 +17,7 @@ namespace Rhythm.Levels {
 			foreach (DepositProbability prob in data.depositProbability) {
 				ItemData depositData = prob.deposit;
 				int amount = (int)Random.Range(prob.min, prob.max);
-				float verticalStep = levelLength / Mathf.Max(2f, amount + 1);
+				float verticalStep = levelLength * .9f / Mathf.Max(2f, amount + 1);
 				for (int j = 0; j < amount; j++) {
 					float randomHorizontal = Random.Range(-1f, 1f) * HORIZONTAL_DEPOSIT_SPREAD;
 					// limit vertical spread to vertical step so nothing is generated after the finish line

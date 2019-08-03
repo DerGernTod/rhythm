@@ -27,6 +27,7 @@ namespace Rhythm.Services {
 
         public float MetronomeDiff { get; private set; }
         public bool HasBeat { get; private set; }
+        public List<float> CurrentNotes => _currentNotes;
 
         private double _lastMetronomeTickTime;
         private double _lastMetronomeFullTickTime;
@@ -251,7 +252,7 @@ namespace Rhythm.Services {
             }
         }
 
-        private static NoteQuality CalcNoteQuality(float beatTimeDiff) {
+        public static NoteQuality CalcNoteQuality(float beatTimeDiff) {
             float absBeatTimeDiff = Mathf.Abs(beatTimeDiff);
 
             if (absBeatTimeDiff < FAIL_TOLERANCE_PERFECT) {

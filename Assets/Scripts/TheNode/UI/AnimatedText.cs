@@ -108,18 +108,18 @@ namespace TheNode.UI {
             int maxYPos = 0;
             int minYPos = 0;
             List<CharacterInfo> charInfos = new List<CharacterInfo>();
+            List<float> xOffsets = new List<float>();
             string originalText = _text.text;
+            int actualFontSize = _text.cachedTextGenerator.fontSizeUsedForBestFit;
             for (int i = 0; i < originalText.Length; i++) {
                 char c = originalText[i];
                 if (doRightToLeft) {
                     c = originalText[originalText.Length - 1 - i];
                 }
                 CharacterInfo charInfo;
-                _text.font.GetCharacterInfo(c, out charInfo, _text.fontSize);
+                _text.font.GetCharacterInfo(c, out charInfo, actualFontSize);
                 charInfos.Add(charInfo);
                 string newText = "" + c;
-                float pixelsPerUnit = _text.pixelsPerUnit;
-                float advance = charInfo.advance * pixelsPerUnit;
                 bool reuse = i < _createdTexts.Count;
                 GameObject go;
                 Text textCmp;
@@ -133,63 +133,79 @@ namespace TheNode.UI {
                     textCmp = go.AddComponent<Text>();
                 }
                 textCmp.font = _text.font;
-                textCmp.fontSize = _text.fontSize;
+                textCmp.fontSize = actualFontSize;
                 textCmp.color = _text.color;
                 textCmp.alignment = _text.alignment;
                 textCmp.verticalOverflow = VerticalWrapMode.Truncate;
                 textCmp.horizontalOverflow = HorizontalWrapMode.Wrap;
-                textCmp.alignByGeometry = true;
+                textCmp.alignByGeometry = _text.alignByGeometry;
                 go.transform.SetParent(transform);
                 RectTransform goTransform = go.GetComponent<RectTransform>();
-
-                RectTransform.Edge edgeH = RectTransform.Edge.Left;
-                if (doRightToLeft) {
-                    edgeH = RectTransform.Edge.Right;
-                }
-
-                float targetXPos = xPos;
-                goTransform.SetInsetAndSizeFromParentEdge(edgeH, targetXPos, charInfo.glyphWidth);
                 goTransform.localScale = Vector3.one;
                 goTransform.localRotation = Quaternion.identity;
+                goTransform.anchoredPosition = Vector2.zero;
+                goTransform.anchorMin = Vector2.zero;
+                goTransform.anchorMax = Vector2.one;
                 textCmp.text = newText;
                 newTexts.Add(textCmp);
                 newTransforms.Add(goTransform);
                 maxYPos = Mathf.Max(maxYPos, charInfo.maxY);
                 minYPos = Mathf.Min(minYPos, charInfo.minY);
-                xPos += advance;
+                xPos += charInfo.advance;
+                xOffsets.Add(xPos);
             }
 
             RectTransform rt = GetComponent<RectTransform>();
+            Rect parentRect = rt.rect;
+            int smallestFontSize = 999;
             for (int i = 0; i < newTransforms.Count; i++) {
                 RectTransform t = newTransforms[i];
-                Rect parentRect = rt.rect;
-
                 CharacterInfo charInfo = charInfos[i];
+                Vector2 glyphSize = new Vector2(
+                    charInfo.maxX - charInfo.minX,
+                    charInfo.maxY - charInfo.minY);
+                Vector2 pivot = Vector2.zero;
+                Vector2 targetPos = Vector2.zero;
+                RectTransform.Edge verticalEdge = RectTransform.Edge.Bottom;
+                RectTransform.Edge horizontalEdge = RectTransform.Edge.Left;
+                
+                // vertical
                 if (doFromUpper) {
-                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, -parentRect.height + maxYPos - charInfo.minY, charInfo.glyphHeight);    
+                    pivot.y = 1;
+                    targetPos.y = -charInfo.maxY - minYPos;
+                    verticalEdge = RectTransform.Edge.Top;
                 } else if (doFromLower) {
-                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, charInfo.minY + minYPos + maxYPos, charInfo.glyphHeight);
+                    targetPos.y = charInfo.maxY;
                 } else {
-                    t.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, charInfo.minY + (parentRect.height - maxYPos - minYPos) * .5f, charInfo.glyphHeight);
+                    pivot.y = .5f;
+                    targetPos.y = charInfo.minY + glyphSize.y * .5f;
+                }
+                
+                //horizontal
+                float curOffset = xOffsets[i];
+                if (doCenter) {
+                    pivot.x = .5f;
+                    targetPos.x = curOffset + (parentRect.width - xPos - glyphSize.x) * .5f;
+                } else if (doRightToLeft) {
+                    pivot.x = 1f;
+                    horizontalEdge = RectTransform.Edge.Right;
+                    targetPos.x = curOffset - parentRect.width;
+                } else {
+                    targetPos.x = curOffset;
                 }
 
-                RectTransform rectTransform = newTransforms[i];
-                
-                if (doCenter) {
-                    rectTransform.anchoredPosition += (parentRect.width - xPos) * .5f * Vector2.right;
-                } else if (doRightToLeft) {
-                    rectTransform.anchoredPosition += parentRect.width * .5f * Vector2.right;
-                } else {
-                    rectTransform.anchoredPosition -= parentRect.width * .5f * Vector2.right;
-                }
-                Vector2 anchoredPosition = rectTransform.anchoredPosition;
-                Vector2 halfGlyphSize = new Vector2(charInfo.glyphWidth, charInfo.glyphHeight);
+                t.pivot = pivot;
+                t.SetInsetAndSizeFromParentEdge(horizontalEdge, targetPos.x, glyphSize.x);
+                t.SetInsetAndSizeFromParentEdge(verticalEdge, targetPos.y, glyphSize.y);
+
+                Vector2 anchoredPosition = t.anchoredPosition;
                 Vector2 rectSize = new Vector2(parentRect.width, parentRect.height);
-                rectTransform.anchorMax = (anchoredPosition + halfGlyphSize) / rectSize;
-                rectTransform.anchorMin = (anchoredPosition - halfGlyphSize) / rectSize;
-                rectTransform.offsetMax = Vector2.zero;
-                rectTransform.offsetMin = Vector2.zero;
-                newYPositions.Add(rectTransform.anchoredPosition.y);
+                t.anchorMax = (anchoredPosition + glyphSize) / rectSize;
+                t.anchorMin = (anchoredPosition - glyphSize) / rectSize;
+                t.offsetMax = Vector2.zero;
+                t.offsetMin = Vector2.zero;
+                newYPositions.Add(t.anchoredPosition.y);
+                // TODO: uncomment this when size problem is resolved
                 Text textCmp = newTexts[i];
                 textCmp.resizeTextForBestFit = _text.resizeTextForBestFit;
                 textCmp.resizeTextMaxSize = _text.resizeTextMaxSize;

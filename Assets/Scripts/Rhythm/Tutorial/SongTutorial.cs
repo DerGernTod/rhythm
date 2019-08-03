@@ -30,6 +30,8 @@ namespace Rhythm.Tutorial {
         private List<RectTransform> _indicatorLines;
         private List<CanvasGroup> _lineCanvasGroups;
         private float _halfIndicatorWidth;
+        private Color _indicatorColorGreen = new Color(.2f, .8f, .2f);
+        private Color _indicatorColorWhite = new Color(1, 1, 1);
 
         private void Start() {
             _beatInputService = ServiceLocator.Get<BeatInputService>();
@@ -52,12 +54,15 @@ namespace Rhythm.Tutorial {
                 _indicatorLines.Add(indicatorLine);
                 _lineCanvasGroups.Add(indicatorLine.GetComponent<CanvasGroup>());
             }
+            metronomeDiffIndicator.transform.SetSiblingIndex(metronomeDiffIndicator.transform.childCount - 1);
             CalcIndicatorPosition(_beatInputService.MetronomeDiff / BeatInputService.NOTE_TIME);
-            
+            Color color = metronomeDiffIndicator.color;
+            _indicatorColorGreen.a = color.a;
+            _indicatorColorWhite.a = color.a;
         }
 
         private void OnGameStarted() {
-            ServiceLocator.Get<PersistenceService>().CurrentPlayer.LearnSong(songData);
+            ServiceLocator.Get<PersistenceService>().CurrentPlayer.LearnSong(songData.name);
             _beatInputService.ExecutionStarted += ExecutionStarted;
             _beatInputService.ExecutionFinished += ExecutionFinished;
             _beatInputService.BeatLost += BeatLost;
@@ -83,7 +88,8 @@ namespace Rhythm.Tutorial {
                     }
                 }
             }
-            iTween.PunchScale(_indicatorLines[closestIndex].gameObject, Vector3.one * 1.1f, BeatInputService.NOTE_TIME);
+//            iTween.PunchScale(_indicatorLines[closestIndex].gameObject, Vector3.one * 1.1f, BeatInputService.NOTE_TIME);
+            iTween.PunchScale(metronomeDiffIndicator.gameObject, Vector3.one * 1.1f, BeatInputService.NOTE_TIME * .75f);
         }
 
         private void UpdateTutorial() {
@@ -100,12 +106,12 @@ namespace Rhythm.Tutorial {
 
             // change color and scale
             float absMetronomeDiff = Mathf.Abs(metronomeDiff);
-            if (absMetronomeDiff < BeatInputService.FAIL_TOLERANCE && metronomeDiffIndicator.color != Color.green) {
-                metronomeDiffIndicator.color = Color.green;
-                iTween.ScaleTo(metronomeDiffIndicator.gameObject, Vector3.one + Vector3.up * .15f, BeatInputService.FAIL_TOLERANCE);
-            } else if (absMetronomeDiff >= BeatInputService.FAIL_TOLERANCE && metronomeDiffIndicator.color != Color.white) {
-                metronomeDiffIndicator.color = Color.white;
-                iTween.ScaleTo(metronomeDiffIndicator.gameObject, Vector3.one, BeatInputService.FAIL_TOLERANCE);
+            if (absMetronomeDiff < BeatInputService.FAIL_TOLERANCE && metronomeDiffIndicator.color != _indicatorColorGreen) {
+                metronomeDiffIndicator.color = _indicatorColorGreen;
+//                iTween.ScaleTo(metronomeDiffIndicator.gameObject, Vector3.one + Vector3.one * .15f, BeatInputService.FAIL_TOLERANCE);
+            } else if (absMetronomeDiff >= BeatInputService.FAIL_TOLERANCE && metronomeDiffIndicator.color != _indicatorColorWhite) {
+                metronomeDiffIndicator.color = _indicatorColorWhite;
+//                iTween.ScaleTo(metronomeDiffIndicator.gameObject, Vector3.one, BeatInputService.FAIL_TOLERANCE);
             }
 
             _lastMetronomeDiff = metronomeDiff;

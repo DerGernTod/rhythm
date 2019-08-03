@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using Rhythm.UI;
 using Rhythm.Utils;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Rhythm.Managers {
     public class ComicManager : MonoBehaviour {
@@ -14,14 +12,17 @@ namespace Rhythm.Managers {
         private ComicPage[] _pages;
         private int _pageIndex;
         private Action _update;
+        private Coroutine _nextTimer;
         private void Start() {
             _pages = GetComponentsInChildren<ComicPage>();
             _update = ShowNextPageOnTouch;
+            _nextTimer = StartCoroutine(Coroutines.ExecuteAfterSeconds(2, ShowNextPage));
         }
 
         private void ShowNextPageOnTouch() {
             bool mouseButtonDown = Input.GetMouseButtonDown(0);
             if (mouseButtonDown) {
+                StopCoroutine(_nextTimer);
                 ShowNextPage();
             }
         }
@@ -29,26 +30,51 @@ namespace Rhythm.Managers {
         private void ShowNextPage() {
             ComicPage curPage = _pages[_pageIndex++];
             curPage.Show();
-            curPage.FadeInComplete += () => curPage.ShowNextPanel();
+            Action curPageOnFadeInComplete = delegate { ShowNextPanelAndStartTimer(curPage); };
+            curPage.FadeInComplete += curPageOnFadeInComplete;
             curPage.AllPanelsShowComplete += () => {
-                _update = _pageIndex == _pages.Length ? Constants.Noop : HideCurrentPageOnTouch;
+                Debug.Log("All panels show complete for " + curPage.name);
+                bool isLastPage = _pageIndex == _pages.Length;
+                Debug.Log("Setting update to " + (isLastPage ? "noop" : "hide current page on touch"));
+                _update = isLastPage ? Constants.Noop : HideCurrentPageOnTouch;
+                StopCoroutine(_nextTimer);
                 pageFinished?.Invoke(_pageIndex - 1);
-            };
-            _update = () => {
-                if (Input.GetMouseButtonDown(0)) {
-                    curPage.ShowNextPanel();
+                if (!isLastPage) {
+                    _nextTimer = StartCoroutine(Coroutines.ExecuteAfterSeconds(3, LoadNextPage));
                 }
             };
+            Debug.Log("Setting update to show next panel on touch");
+            _update = () => ShowNextPanelOnTouch(curPage);
+        }
+
+        private void ShowNextPanelOnTouch(ComicPage curPage) {
+            if (Input.GetMouseButtonDown(0)) {
+                ShowNextPanelAndStartTimer(curPage);
+            }
+        }
+
+        private void ShowNextPanelAndStartTimer(ComicPage curPage) {
+            StopCoroutine(_nextTimer);
+            _nextTimer = StartCoroutine(Coroutines.ExecuteAfterSeconds(3, () => ShowNextPanelAndStartTimer(curPage)));
+            curPage.ShowNextPanel();
         }
 
         private void HideCurrentPageOnTouch() {
             bool mouseButtonDown = Input.GetMouseButtonDown(0);
             if (mouseButtonDown) {
-                ComicPage comicPage = _pages[_pageIndex - 1];
-                comicPage.Hide();
-                comicPage.FadeOutComplete += ShowNextPage;
-                _update = Constants.Noop;
+                LoadNextPage();
             }
+        }
+
+        private void LoadNextPage() {
+            Debug.Log("Load next page called");
+            ComicPage comicPage = _pages[_pageIndex - 1];
+            comicPage.Hide();
+            comicPage.FadeOutComplete += ShowNextPage;
+            Debug.Log("Setting update to noop");
+            _update = Constants.Noop;
+            // stop coroutine that waits for touch to hide page, since we're now waiting on fadeoutcomplete
+            StopCoroutine(_nextTimer);
         }
 
         private void Update() {

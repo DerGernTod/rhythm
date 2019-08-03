@@ -18,7 +18,7 @@ namespace Rhythm.Services {
             }
 
             if (Players.Count == 0) {
-                Players.Add(new PlayerStore("default"));
+                AddPlayer("default");
             }
             ChangeActivePlayer(Players[0]);
         }
@@ -34,8 +34,18 @@ namespace Rhythm.Services {
             BinaryPlayerSaver.SavePlayer(CurrentPlayer);
         }
 
+        public void DeleteCurrentPlayer() {
+            BinaryPlayerSaver.DeletePlayer(CurrentPlayer);
+            Players.Remove(CurrentPlayer);
+            if (Players.Count == 0) {
+                AddPlayer("default");
+            }
+            ChangeActivePlayer(Players[0]);
+        }
+
         public void ChangeActivePlayer(PlayerStore player) {
             CurrentPlayer = player;
+            Debug.Log("Changed active player to " + player.Name);
             OnActivePlayerChanged?.Invoke(CurrentPlayer);
         }
 

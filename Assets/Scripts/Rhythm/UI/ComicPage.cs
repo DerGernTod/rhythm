@@ -14,7 +14,7 @@ namespace Rhythm.UI {
         public event Action AllPanelsShowComplete;
         public event Action FadeOutComplete;
         public event Action FadeInComplete;
-        
+        public bool HasMorePanels => _curPanelIndex < _panels.Length - 1;
         private void Start() {
             _canvasGroup = GetComponent<CanvasGroup>();
             _canvasGroup.alpha = 0;
@@ -22,12 +22,12 @@ namespace Rhythm.UI {
         }
 
         private IEnumerator FadeInPage() {
-            yield return StartCoroutine(Coroutines.FadeCanvasGroup(_canvasGroup, true));
+            yield return StartCoroutine(Coroutines.FadeTo(_canvasGroup, 1, 1));
             FadeInComplete?.Invoke();
         }
 
         private IEnumerator FadeOutPage() {
-            yield return StartCoroutine(Coroutines.FadeCanvasGroup(_canvasGroup, false));
+            yield return StartCoroutine(Coroutines.FadeTo(_canvasGroup, 0, 1));
             FadeOutComplete?.Invoke();
         }
 

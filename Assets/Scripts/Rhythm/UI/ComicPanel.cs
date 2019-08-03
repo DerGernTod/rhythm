@@ -16,7 +16,7 @@ namespace Rhythm.UI {
         }
         
         private IEnumerator FadeInPanel() {
-            yield return StartCoroutine(Coroutines.FadeCanvasGroup(_canvasGroup, true));
+            yield return StartCoroutine(Coroutines.FadeTo(_canvasGroup, 1, 1));
             FadeInComplete?.Invoke();
         }
         

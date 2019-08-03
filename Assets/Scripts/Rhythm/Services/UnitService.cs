@@ -13,7 +13,7 @@ namespace Rhythm.Services {
 		public event Action<Unit> UnitDestroyed;
 
 		public void Initialize() {
-			UnitData[] units = Resources.LoadAll<UnitData>("units");
+			UnitData[] units = Resources.LoadAll<UnitData>("data/units");
 			foreach (UnitData unit in units) {
 				_unitsData.Add(unit.name, unit);
 			}

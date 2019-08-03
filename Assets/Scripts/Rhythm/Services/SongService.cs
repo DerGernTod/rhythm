@@ -17,7 +17,7 @@ namespace Rhythm.Services {
         private PlayerStore _curPlayer;
         
         public void Initialize() {
-            SongData[] songData = Resources.LoadAll<SongData>("songs");
+            SongData[] songData = Resources.LoadAll<SongData>("data/songs");
             _songs = new SongDictionary();
             _knownSongs = new SongDictionary();
             foreach (SongData song in songData) {
@@ -32,8 +32,8 @@ namespace Rhythm.Services {
             }
         }
 
-        private void AddKnownSong(SongData song) {
-            _knownSongs.Add(song.name, _songs[song.name]);
+        private void AddKnownSong(string songName) {
+            _knownSongs.Add(songName, _songs[songName]);
         }
 
         public void PostInitialize() {
@@ -45,8 +45,9 @@ namespace Rhythm.Services {
         }
 
         private void LoadCurPlayerKnownSongs() {
-            foreach (SongData song in _curPlayer.KnownSongs) {
-                AddKnownSong(song);
+            _knownSongs.Clear();
+            foreach (string songName in _curPlayer.KnownSongs) {
+                AddKnownSong(songName);
             }
         }
 
@@ -57,7 +58,7 @@ namespace Rhythm.Services {
             LoadCurPlayerKnownSongs();
         }
 
-        private void OnSongLearned(SongData song) {
+        private void OnSongLearned(string song) {
             AddKnownSong(song);
         }
 
@@ -72,6 +73,10 @@ namespace Rhythm.Services {
                 return song;
             }
             throw new Exception("Unknown song with name " + songName + "!");
+        }
+
+        public IEnumerable<string> GetAvailableSongNames() {
+            return _songs.Values.Select(song => song.Name);
         }
 
         public List<Song> CheckSongs(float[] notes) {

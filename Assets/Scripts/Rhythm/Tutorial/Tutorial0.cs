@@ -1,4 +1,5 @@
 using System;
+using Rhythm.Persistence;
 using Rhythm.Services;
 using Rhythm.Songs;
 using Rhythm.UI;
@@ -19,6 +20,7 @@ namespace Rhythm.Tutorial {
         [SerializeField] private Sprite[] moodSprites;
         [SerializeField] private Sprite[] drumSprites;
         [SerializeField] private AnimatedText songLearnedText;
+        [SerializeField] private CanvasGroup songTutorial;
 #pragma warning restore 0649
         private BeatInputService _beatInputService;
         private bool _moodDirection;
@@ -107,8 +109,11 @@ namespace Rhythm.Tutorial {
             OnDestroy();
             _gameStateService.TriggerGameFinishing();
             StartCoroutine(Coroutines.FadeTo(songLearnedText.GetComponent<CanvasGroup>(), 1, .25f));
+            StartCoroutine(Coroutines.FadeTo(songTutorial, 0, .5f));
             songLearnedText.StartAnimation();
             songLearnedText.TriggerImpulse();
+            ServiceLocator.Get<PersistenceService>().SaveCurrentPlayer();
+            iTween.ScaleBy(pageToScale.gameObject, Vector3.one / 1.05f, 5);
             StartCoroutine(Coroutines.ExecuteAfterSeconds(1.5f, () => {
                 _update = () => {
                     if (Input.GetMouseButtonDown(0)) {

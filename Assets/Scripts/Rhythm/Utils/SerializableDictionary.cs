@@ -12,7 +12,7 @@ namespace Rhythm.Utils {
 
         [SerializeField] private readonly List<TK> _listOfKeys = new List<TK>();
         [SerializeField] private readonly List<TV> _listOfValues = new List<TV>();
-
+        
         #region Serialization Related
 
         public void OnBeforeSerialize() {
