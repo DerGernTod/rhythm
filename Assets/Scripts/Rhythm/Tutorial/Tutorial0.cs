@@ -1,12 +1,10 @@
 using System;
-using Rhythm.Persistence;
 using Rhythm.Services;
 using Rhythm.Songs;
 using Rhythm.UI;
 using Rhythm.Utils;
 using TheNode.UI;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -118,7 +116,7 @@ namespace Rhythm.Tutorial {
                 _update = () => {
                     if (Input.GetMouseButtonDown(0)) {
                         _update = Constants.Noop;
-                        _gameStateService.TriggerSceneTransition("IngameScene");
+                        _gameStateService.TriggerSceneTransition(BuildScenes.Ingame);
                     }
                 };
             }));

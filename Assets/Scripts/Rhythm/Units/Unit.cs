@@ -8,6 +8,7 @@ using Rhythm.Utils;
 using UnityEngine;
 
 namespace Rhythm.Units {
+	[RequireComponent(typeof(Collider2D))]
 	public class Unit : MonoBehaviour {
 		private static int ids;
 		

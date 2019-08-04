@@ -63,8 +63,9 @@ namespace Rhythm.Tutorial {
 
         private void OnGameStarted() {
             ServiceLocator.Get<PersistenceService>().CurrentPlayer.LearnSong(songData.name);
-            _beatInputService.ExecutionStarted += ExecutionStarted;
-            _beatInputService.ExecutionFinished += ExecutionFinished;
+            _beatInputService.ExecutionStarting += ExecutionStarted;
+            _beatInputService.ExecutionFinishing += ExecutionFinished;
+            _beatInputService.ExecutionAborted += ExecutionFinished;
             _beatInputService.BeatLost += BeatLost;
             _beatInputService.NoteHit += PunchClosestIndicator;
             BeatLost();
@@ -162,18 +163,24 @@ namespace Rhythm.Tutorial {
 
         private void ExecutionFinished(Song obj) {
             TriggerFade(1);
+            foreach (RectTransform indicatorLine in _indicatorLines) {
+                StartCoroutine(Coroutines.FadeColor(indicatorLine.GetComponent<Image>(), Color.cyan, BeatInputService.HALF_NOTE_TIME));
+            }
         }
 
         private void ExecutionStarted(Song song) {
             TriggerFade(.25f);
+            foreach (RectTransform indicatorLine in _indicatorLines) {
+                StartCoroutine(Coroutines.FadeColor(indicatorLine.GetComponent<Image>(), Color.red, BeatInputService.HALF_NOTE_TIME));
+            }
         }
 
         private void Update() {
             _update();
         }
         private void OnDestroy() {
-            _beatInputService.ExecutionStarted -= ExecutionStarted;
-            _beatInputService.ExecutionFinished -= ExecutionFinished;
+            _beatInputService.ExecutionStarting -= ExecutionStarted;
+            _beatInputService.ExecutionFinishing -= ExecutionFinished;
             _beatInputService.ExecutionAborted -= ExecutionFinished;
             _gameStateService.GameStarted -= OnGameStarted;
             _beatInputService.NoteHit -= NoteHit;

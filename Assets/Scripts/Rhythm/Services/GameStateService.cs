@@ -1,26 +1,27 @@
 using System;
-using UnityEngine.SceneManagement;
+using Rhythm.Utils;
 
 namespace Rhythm.Services {
     public class GameStateService: IService {
         public event Action GameFinishing;
         public event Action GameStarted;
-        public event Action<string, string> SceneTransitionStarted;
-        public event Action<string, string> SceneTransitionFinished;
+        public event Action<BuildScenes?, BuildScenes> SceneTransitionStarted;
+        public event Action<BuildScenes?, BuildScenes> SceneTransitionFinished;
 
-        private string _sceneFrom;
-        private string _sceneTo;
+        private BuildScenes? _buildSceneFrom;
+        private BuildScenes _buildSceneTo;
+        private BuildScenes? _currentBuildScene;
 
-        public void TriggerSceneTransition(string to) {
-            _sceneFrom = SceneManager.GetActiveScene().name;
-            _sceneTo = to;
-            SceneTransitionStarted?.Invoke(_sceneFrom, _sceneTo);
+        public void TriggerSceneTransition(BuildScenes to) {
+            _buildSceneFrom = _currentBuildScene;
+            _buildSceneTo = to;
+            SceneTransitionStarted?.Invoke(_buildSceneFrom, _buildSceneTo);
         }
 
         public void TriggerSceneTransitionFinished() {
-            SceneTransitionFinished?.Invoke(_sceneFrom, _sceneTo);
-            _sceneFrom = null;
-            _sceneTo = null;
+            SceneTransitionFinished?.Invoke(_buildSceneFrom, _buildSceneTo);
+            _currentBuildScene = _buildSceneTo;
+            _buildSceneFrom = null;
         }
         
         public void TriggerGameFinishing() {

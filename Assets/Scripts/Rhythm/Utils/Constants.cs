@@ -9,4 +9,11 @@ namespace Rhythm.Utils {
         public const int PLAYER_ID_PLAYER = 0;
         public const int PLAYER_ID_AI_0 = 1;
     }
+
+    public enum BuildScenes {
+        Preload = 0,
+        Intro = 1,
+        Ingame = 2,
+        Overworld = 3
+    }
 }

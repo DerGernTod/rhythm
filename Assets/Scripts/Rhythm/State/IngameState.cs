@@ -51,6 +51,7 @@ namespace Rhythm.State {
         private void OnGameFinishing() {
             StartCoroutine(Coroutines.FadeTo(finishText.GetComponent<CanvasGroup>(), 1, BeatInputService.NOTE_TIME));
             iTween.MoveFrom(finishText.gameObject, new Vector3(Screen.width * .5f, Screen.height * .5f, 0), 1);
+            finishText.StartAnimation();
             finishText.TriggerImpulse();
         }
 

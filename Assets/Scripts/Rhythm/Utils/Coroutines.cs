@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Rhythm.Utils {
     public static class Coroutines {
@@ -13,17 +14,29 @@ namespace Rhythm.Utils {
             action();
         }
 
-        public static IEnumerator FadeTo(CanvasGroup canvas, float target, float time, Action onFinished = null) {
-            float stepPerSec = (target - canvas.alpha) / time;
-            while (Math.Abs(target - canvas.alpha) > Single.Epsilon) {
-                float currentRest = target - canvas.alpha;
-                float addition = stepPerSec * Time.deltaTime;
-                if (Mathf.Abs(addition) > Mathf.Abs(currentRest)) {
-                    addition = currentRest;
-                }
-                canvas.alpha += addition;
+        public static IEnumerator FadeColor(Image image, Color target, float time, Action onFinished = null) {
+            Color from = image.color;
+            float curTime = 0;
+            while (curTime < time) {
+                curTime += Time.deltaTime;
+                image.color = Color.Lerp(from, target, curTime / time);
                 yield return null;
             }
+
+            image.color = target;
+            onFinished?.Invoke();
+        }
+        
+
+        public static IEnumerator FadeTo(CanvasGroup canvas, float target, float time, Action onFinished = null) {
+            float from = canvas.alpha;
+            float curTime = 0;
+            while (curTime < time) {
+                curTime += Time.deltaTime;
+                canvas.alpha = Mathf.Lerp(from, target, curTime / time);
+                yield return null;
+            }
+
             canvas.alpha = target;
             onFinished?.Invoke();
         }

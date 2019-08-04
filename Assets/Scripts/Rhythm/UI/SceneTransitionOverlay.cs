@@ -14,19 +14,19 @@ namespace Rhythm.UI {
         private GameStateService _gameStateService;
         private CanvasGroup _canvasGroup;
 
-        private void Start() {
+        private void Awake() {
             _gameStateService = ServiceLocator.Get<GameStateService>();
-            _canvasGroup = GetComponent<CanvasGroup>();
             _gameStateService.SceneTransitionStarted += OnSceneTransitionStarted;
+            _canvasGroup = GetComponent<CanvasGroup>();
         }
 
         private void OnDestroy() {
             _gameStateService.SceneTransitionStarted -= OnSceneTransitionStarted;
         }
 
-        private void OnSceneTransitionStarted(string from, string to) {
+        private void OnSceneTransitionStarted(BuildScenes? from, BuildScenes to) {
             StartCoroutine(Coroutines.FadeTo(_canvasGroup, 1, transitionTime, () => {
-                SceneManager.LoadSceneAsync(to).completed +=
+                SceneManager.LoadSceneAsync((int)to).completed +=
                     operation => StartCoroutine(
                         Coroutines.FadeTo(_canvasGroup, 0, transitionTime, () => {
                         _gameStateService.TriggerSceneTransitionFinished();

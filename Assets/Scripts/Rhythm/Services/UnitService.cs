@@ -24,11 +24,11 @@ namespace Rhythm.Services {
 		}
 
 		public void PostInitialize() {
-			ServiceLocator.Get<GameStateService>().SceneTransitionStarted += OnSceneTransitionStarted;
-			SceneManager.activeSceneChanged += (from, to) => OnSceneTransitionStarted(from.name, to.name);
+			ServiceLocator.Get<GameStateService>().SceneTransitionStarted += (from, to) => OnSceneTransitionStarted();
+			SceneManager.activeSceneChanged += (from, to) => OnSceneTransitionStarted();
 		}
 
-		private void OnSceneTransitionStarted(string from, string to) {
+		private void OnSceneTransitionStarted() {
 			foreach (KeyValuePair<int,Unit> createdUnit in _createdUnits) {
 				UnitDestroyed?.Invoke(createdUnit.Value);
 			}

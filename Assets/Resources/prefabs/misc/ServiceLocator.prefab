@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2415323550929698621}
   - component: {fileID: 2415323550929698618}
   - component: {fileID: 2415323550929698620}
+  - component: {fileID: 2062843562}
   m_Layer: 0
   m_Name: ServiceLocator
   m_TagString: Untagged
@@ -25,7 +26,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2415323550929698623}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -49,6 +50,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bfaec2d3129425f93dbb9a501f3e119, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  startScene: 1
 --- !u!82 &2415323550929698620
 AudioSource:
   m_ObjectHideFlags: 0
@@ -145,3 +147,15 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &2062843562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2415323550929698623}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdfbf74be9698d340bc18331e48c475a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
