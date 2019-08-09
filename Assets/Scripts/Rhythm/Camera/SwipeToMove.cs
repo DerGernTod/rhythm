@@ -1,3 +1,5 @@
+using Rhythm.UI;
+using Rhythm.Utils;
 using UnityEngine;
 
 namespace Rhythm.Camera {
@@ -12,20 +14,24 @@ namespace Rhythm.Camera {
         private Vector3 _prevMousePos;
         private Vector3 _offset;
         private bool _moveEnabled;
+        private bool _canStartMove;
         private Vector3 _halfScreenSize;
         private Vector3 _velocity = Vector3.zero;
         private Vector2 xyScale;
+        private UnityEngine.Camera _cam;
+        private int _touchableLayer;
 
         private void Start() {
             Vector3 curPos = transform.position;
             _offset = _prevMousePos - curPos;
             _target = curPos + _offset;
-            UnityEngine.Camera cam = GetComponent<UnityEngine.Camera>();
+            _cam = GetComponent<UnityEngine.Camera>();
             float aspect = Screen.width / (float) Screen.height;
-            float cameraOrthographicSize = cam.orthographicSize;
+            float cameraOrthographicSize = _cam.orthographicSize;
             xyScale = 2f * new Vector2(aspect * cameraOrthographicSize / Screen.width, cameraOrthographicSize / Screen.height);
             _prevMousePos = new Vector3(Input.mousePosition.x * xyScale.x, Input.mousePosition.y * xyScale.y, curPos.z);
             _halfScreenSize = new Vector2(cameraOrthographicSize * aspect, cameraOrthographicSize);
+            _touchableLayer = LayerMask.NameToLayer(Constants.LAYER_TOUCHABLES);
         }
 
         private void OnDrawGizmos() {
@@ -34,11 +40,22 @@ namespace Rhythm.Camera {
         }
 
         private void Update() {
-            _moveEnabled = Input.GetMouseButton(0);
+            RaycastHit2D hitInfo = Physics2D.Raycast(_cam.ScreenToWorldPoint(Input.mousePosition), Vector3.zero, 0, 1 << _touchableLayer);
+            _canStartMove = !hitInfo.collider;
+            Debug.Log("ray hit " + hitInfo.collider?.name);
+            if (!_moveEnabled && _canStartMove) {
+                _moveEnabled = Input.GetMouseButtonDown(0);
+            }
+
+            if (_moveEnabled) {
+                _moveEnabled = !Input.GetMouseButtonUp(0);
+            }
+
             Vector3 mousePosition = new Vector3(
                 Input.mousePosition.x * xyScale.x,
                 Input.mousePosition.y * xyScale.y,
-                transform.position.z); 
+                transform.position.z);
+            
             if (_moveEnabled) {
                 _velocity = _prevMousePos - mousePosition;
             } else {
