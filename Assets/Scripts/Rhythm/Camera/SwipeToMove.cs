@@ -1,4 +1,3 @@
-using Rhythm.UI;
 using Rhythm.Utils;
 using UnityEngine;
 
@@ -19,7 +18,7 @@ namespace Rhythm.Camera {
         private Vector3 _velocity = Vector3.zero;
         private Vector2 xyScale;
         private UnityEngine.Camera _cam;
-        private int _touchableLayer;
+        private int _touchableLayerMask;
 
         private void Start() {
             Vector3 curPos = transform.position;
@@ -31,7 +30,7 @@ namespace Rhythm.Camera {
             xyScale = 2f * new Vector2(aspect * cameraOrthographicSize / Screen.width, cameraOrthographicSize / Screen.height);
             _prevMousePos = new Vector3(Input.mousePosition.x * xyScale.x, Input.mousePosition.y * xyScale.y, curPos.z);
             _halfScreenSize = new Vector2(cameraOrthographicSize * aspect, cameraOrthographicSize);
-            _touchableLayer = LayerMask.NameToLayer(Constants.LAYER_TOUCHABLES);
+            _touchableLayerMask = 1 << LayerMask.NameToLayer(Constants.LAYER_TOUCHABLES);
         }
 
         private void OnDrawGizmos() {
@@ -40,9 +39,8 @@ namespace Rhythm.Camera {
         }
 
         private void Update() {
-            RaycastHit2D hitInfo = Physics2D.Raycast(_cam.ScreenToWorldPoint(Input.mousePosition), Vector3.zero, 0, 1 << _touchableLayer);
+            RaycastHit2D hitInfo = Physics2D.Raycast(_cam.ScreenToWorldPoint(Input.mousePosition), Vector3.zero, 0, _touchableLayerMask);
             _canStartMove = !hitInfo.collider;
-            Debug.Log("ray hit " + hitInfo.collider?.name);
             if (!_moveEnabled && _canStartMove) {
                 _moveEnabled = Input.GetMouseButtonDown(0);
             }

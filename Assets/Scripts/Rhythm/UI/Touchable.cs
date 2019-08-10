@@ -1,15 +1,15 @@
-using System;
 using System.Collections;
 using Rhythm.Utils;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace Rhythm.UI {
     public class Touchable : MonoBehaviour {
 
+#pragma warning disable 0649
         [SerializeField] private Color touchColor = Color.white;
-        [SerializeField] private UnityEvent OnTouch;
+        [SerializeField] private UnityEvent onTouch;
+#pragma warning restore 0649
         
         private Color _initTint;
         private static readonly int TintProp = Shader.PropertyToID("_Tint");
@@ -24,7 +24,7 @@ namespace Rhythm.UI {
 
         private void OnMouseDown() {
             if (_touchEnabled) {
-                OnTouch?.Invoke();
+                onTouch?.Invoke();
                 _touchEnabled = false;
                 StartCoroutine(LerpHighlightColor(touchColor,_initTint, .5f));
             }
