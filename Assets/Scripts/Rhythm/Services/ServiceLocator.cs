@@ -47,7 +47,7 @@ namespace Rhythm.Services {
                 string sceneName = Enum.GetName(typeof(BuildScenes), sceneIndex);
                 string scenePath = SceneUtility.GetScenePathByBuildIndex((int)sceneIndex);
                 // ReSharper disable once PossibleNullReferenceException
-                if (!scenePath.Contains(sceneName)) {
+                if (!scenePath.Contains(sceneName) && !"None".Equals(sceneName)) {
                     Debug.LogError("Build index '" + sceneIndex + "' of scene doesn't match! Expected " + sceneName + " to be part of path " + scenePath);
                     errorCount++;
                     Application.Quit(-1);

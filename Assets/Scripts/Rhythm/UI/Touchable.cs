@@ -1,4 +1,5 @@
 using System.Collections;
+using Rhythm.Services;
 using Rhythm.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,6 +10,7 @@ namespace Rhythm.UI {
 #pragma warning disable 0649
         [SerializeField] private Color touchColor = Color.white;
         [SerializeField] private UnityEvent onTouch;
+        [SerializeField] private BuildScenes loadSceneOnTouch = BuildScenes.None;
 #pragma warning restore 0649
         
         private Color _initTint;
@@ -20,6 +22,13 @@ namespace Rhythm.UI {
             _mat = GetComponent<Renderer>().material;
             _initTint = _mat.GetColor(TintProp);
             gameObject.layer = LayerMask.NameToLayer(Constants.LAYER_TOUCHABLES);
+            if (loadSceneOnTouch != BuildScenes.None) {
+                onTouch.AddListener(LoadScene);
+            }
+        }
+
+        private void LoadScene() {
+            ServiceLocator.Get<GameStateService>().TriggerSceneTransition(loadSceneOnTouch);
         }
 
         private void OnMouseDown() {

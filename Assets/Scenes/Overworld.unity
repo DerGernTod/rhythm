@@ -97,7 +97,7 @@ LightmapSettings:
     m_ShowResolutionOverlay: 1
     m_ExportTrainingData: 0
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 1
+  m_UseShadowmask: 0
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -1139,32 +1139,10 @@ MonoBehaviour:
   touchColor: {r: 1, g: 1, b: 1, a: 1}
   onTouch:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1368624114}
-        m_MethodName: SetLevel
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 11400000, guid: c66f0aabdd5f61140a7d3388a4088614,
-            type: 2}
-          m_ObjectArgumentAssemblyTypeName: Rhythm.Levels.LevelData, Assembly-CSharp
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1368624114}
-        m_MethodName: Show
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
+  loadSceneOnTouch: 4
 --- !u!1 &1767252264
 GameObject:
   m_ObjectHideFlags: 0

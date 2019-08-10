@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Overworld.unity
     guid: b8bf1060616f1b349b23a637d0574970
+  - enabled: 1
+    path: Assets/Scenes/IntroGather.unity
+    guid: f7e4e3b29fa347d4a9b763337ff43985
   m_configObjects: {}
