@@ -67,5 +67,9 @@ namespace Rhythm.Services {
 		public List<Unit> GetAllUnits() {
 			return _createdUnits.Values.ToList();
 		}
+
+		public IEnumerable<Unit> GetAllPlayerUnits() {
+			return _createdUnits.Values.Where(unit => unit.Owner == Constants.PLAYER_ID_PLAYER);
+		}
 	}
 }

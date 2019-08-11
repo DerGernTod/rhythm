@@ -4,14 +4,14 @@ using UnityEngine;
 
 namespace Rhythm.Commands {    
     public class MarchCommandProvider: CommandProvider {
-        public override void ExecutionFinished(Unit unit) {
+        public override void ExecutionFinished() {
         }
 
-        public override void Executed(NoteQuality noteQuality, int streak, Unit unit) {
+        public override void Executed(NoteQuality noteQuality, int streak) {
         }
 
-        public override void CommandUpdate(Unit unit) {
-            unit.transform.Translate(Time.deltaTime * unit.MovementSpeed * Vector3.up);
+        public override void CommandUpdate() {
+            _unit.transform.Translate(Time.deltaTime * _unit.MovementSpeed * Vector3.up);
         }
     }
 }

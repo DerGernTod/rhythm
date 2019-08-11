@@ -12,11 +12,13 @@ namespace Rhythm.State {
     public class IngameState : MonoBehaviour {
         
 #pragma warning disable 0649
-        [SerializeField] private LevelData levelData;
         [SerializeField] private Text countdownText;
         [SerializeField] private AnimatedText finishText;
+        private GameStateService _gameStateService;
 #pragma warning restore 0649
         private void Start() {
+            _gameStateService = ServiceLocator.Get<GameStateService>();
+            LevelData levelData = _gameStateService.CurrentLevelData;
             LoopingBackground background = new GameObject("Looping Background").AddComponent<LoopingBackground>();
             background.transform.Translate(Vector3.forward * 1);
             background.Initialize(levelData);
@@ -26,10 +28,10 @@ namespace Rhythm.State {
             Unit drummer = ServiceLocator.Get<UnitService>().CreateUnit("Drummer");
             firstUnit.transform.Translate(Vector3.up * -8);
             drummer.transform.Translate(Vector3.up * -8.25f);
-            ServiceLocator.Get<GameStateService>().GameFinishing += OnGameFinishing;
+            _gameStateService.GameFinishing += OnGameFinishing;
             StartCoroutine(StartGame());
         }
-        
+
         private IEnumerator StartGame() {
             int remainingTicks = 3;
             while (remainingTicks > 0) {
@@ -56,7 +58,7 @@ namespace Rhythm.State {
         }
 
         private void OnDestroy() {
-            ServiceLocator.Get<GameStateService>().GameFinishing -= OnGameFinishing;
+            _gameStateService.GameFinishing -= OnGameFinishing;
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Rhythm.Levels;
 using Rhythm.Services;
 using Rhythm.Songs;
 using Rhythm.UI;
@@ -19,6 +20,7 @@ namespace Rhythm.Tutorial {
         [SerializeField] private Sprite[] drumSprites;
         [SerializeField] private AnimatedText songLearnedText;
         [SerializeField] private CanvasGroup songTutorial;
+        [SerializeField] private LevelData targetLevel;
 #pragma warning restore 0649
         private BeatInputService _beatInputService;
         private bool _moodDirection;
@@ -85,7 +87,7 @@ namespace Rhythm.Tutorial {
                 if (_successCount >= 4) {
                     _successCount = 0;
                     SetMoodSpriteIndex(_moodIndex + 1);
-                    if (streak == 6) {
+                    if (streak == 3) {
                         FinishTutorial();
                     }
                 }
@@ -116,6 +118,7 @@ namespace Rhythm.Tutorial {
                 _update = () => {
                     if (Input.GetMouseButtonDown(0)) {
                         _update = Constants.Noop;
+                        _gameStateService.CurrentLevelData = targetLevel;
                         _gameStateService.TriggerSceneTransition(BuildScenes.Ingame);
                     }
                 };

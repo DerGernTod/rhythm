@@ -23,7 +23,7 @@ namespace Rhythm.Songs {
         }
 
         public AudioClip[] GetClipsByStreakPower(int streakPower) {
-            return _clips[streakPower];
+            return _clips.Length > streakPower ? _clips[streakPower] : new AudioClip[0];
         }
 
         public bool Contains(float[] beats) {

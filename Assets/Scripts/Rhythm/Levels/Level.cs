@@ -10,7 +10,7 @@ namespace Rhythm.Levels {
 		
 		public void Initialize(LevelData data) {
 			int levelLength = data.length;
-			ItemDeposit depositPrefab = Resources.Load<ItemDeposit>("prefabs/items/Item");
+			ItemDeposit depositPrefab = Resources.Load<ItemDeposit>("prefabs/items/ItemDeposit");
 			GameObject finishLinePrefab = Resources.Load<GameObject>("prefabs/misc/FinishLine");
 
 			// todo define start and end, deploy deposits at correct locations

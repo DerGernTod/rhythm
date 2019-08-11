@@ -9,8 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bd3365e30744416a96a2aeafe07b9d47, type: 3}
-  m_Name: ToolAxe0
+  m_Script: {fileID: 11500000, guid: bc4c7cfaac234ffca1180f7309020872, type: 3}
+  m_Name: ToolTypeAxe
   m_EditorClassIdentifier: 
-  tier: {fileID: 11400000, guid: 14ad3fb63487b35498a52d212de6fe41, type: 2}
-  type: {fileID: 11400000, guid: e5a01f1d41cd13544acbd2b8dd73ea28, type: 2}
+  toolTypeName: Axe
+  toolTypeDescription: Lumberjack's finest. Helps you chop down wood.
+  sprite: {fileID: 21300000, guid: c7f49770d47d9a7439754fad09c1db4d, type: 3}

@@ -33,7 +33,9 @@ namespace Rhythm.UI {
         }
 
         private void StartLevel() {
-            ServiceLocator.Get<GameStateService>().TriggerSceneTransition(BuildScenes.Ingame);
+            GameStateService gameStateService = ServiceLocator.Get<GameStateService>();
+            gameStateService.CurrentLevelData = _currentLevel;
+            gameStateService.TriggerSceneTransition(BuildScenes.Ingame);
         }
 
         public void Show() {

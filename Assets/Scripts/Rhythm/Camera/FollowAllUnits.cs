@@ -23,7 +23,9 @@ namespace Rhythm.Camera {
             _units = _unitService.GetAllUnits();
             _gameStateService = ServiceLocator.Get<GameStateService>();
             _gameStateService.GameFinishing += OnGameFinishing;
-            _update = UpdateTargetToUnitAvg;
+            if (_units.Count != 0) {
+                _update = UpdateTargetToUnitAvg;
+            }
         }
 
         private void Start() {
@@ -37,10 +39,16 @@ namespace Rhythm.Camera {
 
         private void UnitServiceOnUnitDestroyed(Unit obj) {
             _units.Remove(obj);
+            if (_units.Count == 0) {
+                _update = Constants.Noop;
+            }
         }
 
         private void UnitServiceOnUnitCreated(Unit obj) {
             _units.Add(obj);
+            if (_units.Count != 0) {
+                _update = UpdateTargetToUnitAvg;
+            }
         }
 
         private void OnDestroy() {

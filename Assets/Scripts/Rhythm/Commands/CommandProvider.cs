@@ -4,8 +4,13 @@ using UnityEngine;
 
 namespace Rhythm.Commands {
     public abstract class CommandProvider: MonoBehaviour {
-        public abstract void ExecutionFinished(Unit unit);
-        public abstract void Executed(NoteQuality noteQuality, int streak, Unit unit);
-        public abstract void CommandUpdate(Unit unit);
+        protected Unit _unit;
+
+        public void RegisterUnit(Unit unit) {
+            _unit = unit;
+        }
+        public abstract void ExecutionFinished();
+        public abstract void Executed(NoteQuality noteQuality, int streak);
+        public abstract void CommandUpdate();
     }
 }

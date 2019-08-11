@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52de0c121cf8b9543bf557ef781e09e3, type: 3}
   m_Name: Lumber0
   m_EditorClassIdentifier: 
-  sprite: {fileID: 21300000, guid: 18de673440d26d041aff807d3b5ef74c, type: 3}
-  depositSprite: {fileID: 21300000, guid: 6984defe9f993e340a3917812b78c019, type: 3}
-  itemName: Broken Log
+  sprite: {fileID: 21300000, guid: 36181249a310ba9418e423b221a5b6d6, type: 3}
+  depositSprite: {fileID: 21300000, guid: 0646eb13f8feb764ebeaef81fec6aab0, type: 3}
+  itemName: Stick
   amount: 1
   requiredTier: {fileID: 11400000, guid: 14ad3fb63487b35498a52d212de6fe41, type: 2}
-  requiredToolType: {fileID: 11400000, guid: e5a01f1d41cd13544acbd2b8dd73ea28, type: 2}
+  requiredToolType: {fileID: 11400000, guid: 9c523204e3f1fd2418499e726e5663cd, type: 2}

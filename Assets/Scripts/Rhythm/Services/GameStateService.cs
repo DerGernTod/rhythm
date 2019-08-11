@@ -1,4 +1,5 @@
 using System;
+using Rhythm.Levels;
 using Rhythm.Utils;
 
 namespace Rhythm.Services {
@@ -11,6 +12,7 @@ namespace Rhythm.Services {
         private BuildScenes? _buildSceneFrom;
         private BuildScenes _buildSceneTo;
         private BuildScenes? _currentBuildScene;
+        public LevelData CurrentLevelData { get; set; }
 
         public void TriggerSceneTransition(BuildScenes to) {
             _buildSceneFrom = _currentBuildScene;
