@@ -8,6 +8,7 @@ using Rhythm.Services;
 using Rhythm.Songs;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Rhythm.Utils.Editor {
     public class RhythmWindow: EditorWindow {
@@ -101,6 +102,9 @@ namespace Rhythm.Utils.Editor {
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(TAB_SIZE * EditorGUI.indentLevel);
+            if (GUILayout.Button("Save current player")) {
+                _persistenceService.SaveCurrentPlayer();
+            }
             if (GUILayout.Button("Delete current player")) {
                 _persistenceService.DeleteCurrentPlayer();
             }
@@ -112,9 +116,21 @@ namespace Rhythm.Utils.Editor {
                 if (currentPlayer.ItemInventory == null) {
                     EditorGUILayout.LabelField("Not initialized", "");
                 } else {
+                    UnityAction action = () => { };
                     foreach (KeyValuePair<ItemData, int> keyValuePair in currentPlayer.ItemInventory) {
+                        EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField(keyValuePair.Key.itemName, keyValuePair.Value + "");
+                        if (GUILayout.Button("+")) {
+                            action = () => currentPlayer.AddItems(keyValuePair.Key, 1);
+                        }
+
+                        if (GUILayout.Button("-")) {
+                            action = () => currentPlayer.RemoveItems(keyValuePair.Key, 1);
+                        }
+                        EditorGUILayout.EndHorizontal();
                     }
+
+                    action();
                 }
 
                 EditorGUI.indentLevel--;
