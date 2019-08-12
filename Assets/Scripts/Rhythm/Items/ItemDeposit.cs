@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Rhythm.Data;
+using Rhythm.Persistence;
 using Rhythm.Services;
 using Rhythm.Tools;
 using Rhythm.Units;
@@ -11,16 +13,20 @@ namespace Rhythm.Items {
     [RequireComponent(typeof(BoxCollider2D))]
     public class ItemDeposit : MonoBehaviour {
         public event UnityAction DepositDepleted;
+        public event UnityAction<ItemData> ItemCollected;
+        
 #pragma warning disable 0649
         [SerializeField] private SpriteRenderer itemPrefab;
         [SerializeField] private AnimationCurve itemSpawnYCurve;
 #pragma warning restore 0649
+        
         public float Health { get; private set; }
         
         private ItemData itemData;
         private SpriteRenderer _spriteRenderer;
         private UnitService _unitService;
         private bool _wasVisible;
+        private float _maxHealth;
 
         private void Awake() {
             _spriteRenderer = GetComponent<SpriteRenderer>();
@@ -37,19 +43,20 @@ namespace Rhythm.Items {
                    && itemData.requiredToolType == toolData.type;
         }
 
-        public void Initialize(ItemData data) {
+        public void Initialize(ItemData data, float health) {
             _spriteRenderer.sprite = data.depositSprite;
             BoxCollider2D boxCollider2D = GetComponent<BoxCollider2D>();
             boxCollider2D.isTrigger = true;
             boxCollider2D.size = _spriteRenderer.size;
             name = data.itemName + GetInstanceID();
             itemData = data;
-            Health = data.amount;
+            Health = health;
+            _maxHealth = health;
         }
 
         public void Collect(Unit collector, float damage) {
             int prevHealth = Mathf.CeilToInt(Health);
-            Health = Mathf.Clamp(Health - damage, 0, itemData.amount);
+            Health = Mathf.Clamp(Health - damage, 0, _maxHealth);
             if (Mathf.CeilToInt(Health) < prevHealth) {
                 SpawnItem(collector);
             }
@@ -65,6 +72,7 @@ namespace Rhythm.Items {
             Color prevColor = item.color;
             Color transparent = new Color(prevColor.r, prevColor.g, prevColor.b, 0);
             item.color = transparent;
+            ItemCollected?.Invoke(itemData);
             StartCoroutine(Coroutines.FadeColor(item.gameObject, prevColor, 1));
             StartCoroutine(Coroutines.MoveAlongCurve(item.transform, itemSpawnYCurve, Vector3.up, 1f, false,
                 () => {

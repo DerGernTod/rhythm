@@ -22,7 +22,6 @@ namespace Rhythm.Utils {
                 curTime += Time.deltaTime;
                 Vector3 curMovePos = axis * curve.Evaluate(curTime / time);
                 Vector3 diff = curMovePos - prevMovePos;
-                Debug.Log("adding diff " + diff);
                 if (useWorldSpace) {
                     transform.position += diff;
                 } else {
