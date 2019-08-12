@@ -16,5 +16,5 @@ MonoBehaviour:
   depositSprite: {fileID: 21300000, guid: 6984defe9f993e340a3917812b78c019, type: 3}
   itemName: Broken Log
   amount: 1
-  requiredTier: {fileID: 11400000, guid: 14ad3fb63487b35498a52d212de6fe41, type: 2}
+  requiredTier: {fileID: 11400000, guid: ca13de10642dc0448808858542f3010e, type: 2}
   requiredToolType: {fileID: 11400000, guid: e5a01f1d41cd13544acbd2b8dd73ea28, type: 2}

@@ -19,3 +19,4 @@ MonoBehaviour:
   commandData:
   - {fileID: 11400000, guid: 74a7f7714674ccf4fa6d807efbc42138, type: 2}
   - {fileID: 11400000, guid: 8df5a0ec0a694b14ab1234ca8d9a96f7, type: 2}
+  toolData: {fileID: 11400000, guid: 20e986316eb1d8c44b4ebe84cd7aa12e, type: 2}

@@ -73,18 +73,17 @@ namespace Rhythm.Tutorial {
             TriggerFade(1);
         }
 
-        private void PunchClosestIndicator(NoteQuality noteQuality, float diff, int streak) {
+        private void PunchClosestIndicator(NoteQuality noteQuality, float diff) {
             if (noteQuality == NoteQuality.Miss) {
                 return;
             }
-            int closestIndex = 0;
+
             // if we don't have a beat, we reset and thus always punch the first index
             if (_hadBeat) {
                 float closestDist = 1;
                 for (int i = 0; i < _indicatorLines.Count; i++) {
                     float curDist = CalcDistToIndicator(_indicatorLines[i]);
                     if (closestDist > curDist) {
-                        closestIndex = i;
                         closestDist = curDist;
                     }
                 }
@@ -149,7 +148,7 @@ namespace Rhythm.Tutorial {
             //TriggerFade(0);
         }
 
-        private void NoteHit(NoteQuality quality, float arg2, int arg3) {
+        private void NoteHit(NoteQuality quality, float diff) {
             if (quality != NoteQuality.Miss) {
                 ResetBeat();
                 TriggerFade(1);
@@ -161,17 +160,17 @@ namespace Rhythm.Tutorial {
             _metronomeTick = 2;
         }
 
-        private void ExecutionFinished(Song obj) {
+        private void ExecutionFinished(Song obj, int streakPower) {
             TriggerFade(1);
             foreach (RectTransform indicatorLine in _indicatorLines) {
-                StartCoroutine(Coroutines.FadeColor(indicatorLine.GetComponent<Image>(), Color.cyan, BeatInputService.HALF_NOTE_TIME));
+                StartCoroutine(Coroutines.FadeColor(indicatorLine.gameObject, Color.cyan, BeatInputService.HALF_NOTE_TIME));
             }
         }
 
-        private void ExecutionStarted(Song song) {
+        private void ExecutionStarted(Song song, int streakPower) {
             TriggerFade(.25f);
             foreach (RectTransform indicatorLine in _indicatorLines) {
-                StartCoroutine(Coroutines.FadeColor(indicatorLine.GetComponent<Image>(), Color.red, BeatInputService.HALF_NOTE_TIME));
+                StartCoroutine(Coroutines.FadeColor(indicatorLine.gameObject, Color.red, BeatInputService.HALF_NOTE_TIME));
             }
         }
 

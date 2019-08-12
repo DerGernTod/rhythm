@@ -1,11 +1,13 @@
 using Rhythm.Items;
 using Rhythm.Services;
 using Rhythm.Units;
+using Rhythm.Utils;
 using UnityEngine;
 
 namespace Rhythm.Commands {    
     public class GatherCommandProvider: CommandProvider {
         private ItemDeposit _closestDeposit;
+        private int curStreakPower = 0;
         public override void ExecutionFinished() {
             // if target still has health, keep it
         }
@@ -21,6 +23,8 @@ namespace Rhythm.Commands {
             if (_closestDeposit) {
                 _closestDeposit.DepositDepleted += DepositDepleted;
             }
+
+            curStreakPower = streak;
         }
 
         private void DepositDepleted() {
@@ -29,6 +33,7 @@ namespace Rhythm.Commands {
         }
 
         private void UpdateClosestDeposit() {
+            Debug.Log(Time.time + ": " + _unit.name + " searching for new deposit");
             _closestDeposit = _unit.GetClosestDeposit();
             if (_closestDeposit) {
                 _closestDeposit.DepositDepleted += DepositDepleted;
@@ -41,10 +46,12 @@ namespace Rhythm.Commands {
             }
 
             Vector3 direction = _closestDeposit.transform.position - _unit.transform.position;
-            if (direction.sqrMagnitude > .5f) {
-                _unit.transform.Translate(Time.deltaTime * _unit.MovementSpeed * direction.normalized);
+            if (direction.sqrMagnitude > .35f) {
+                float speed = _unit.MovementSpeed + _unit.MovementSpeed * curStreakPower / Constants.MAX_STREAK_POWER;
+                _unit.transform.Translate(Time.deltaTime * speed * direction.normalized);
             } else {
-                _closestDeposit.Collect(_unit, 1 * Time.deltaTime);
+                float dps = 1 * Time.deltaTime;
+                _closestDeposit.Collect(_unit, dps + dps * curStreakPower / Constants.MAX_STREAK_POWER);
             }
             // move to target deposit and gather until empty, then move to next deposit if available and continue
         }

@@ -1,4 +1,5 @@
-﻿using Rhythm.Units;
+﻿using Rhythm.Tools;
+using Rhythm.Units;
 using Rhythm.Weapons;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -12,5 +13,6 @@ namespace Rhythm.Data {
         // TODO: graphics
         [FormerlySerializedAs("Prefab")] public Unit prefab;
         [FormerlySerializedAs("CommandData")] public CommandData[] commandData;
+        public ToolData toolData;
     }
 }

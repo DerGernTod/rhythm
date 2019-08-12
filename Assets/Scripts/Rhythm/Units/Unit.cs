@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Rhythm.Commands;
 using Rhythm.Data;
 using Rhythm.Items;
 using Rhythm.Services;
 using Rhythm.Songs;
+using Rhythm.Tools;
 using Rhythm.Utils;
 using UnityEngine;
 
@@ -13,7 +15,7 @@ namespace Rhythm.Units {
 	[RequireComponent(typeof(Collider2D))]
 	public class Unit : MonoBehaviour {
 		private static int ids;
-		
+
 		private int _unitId;
 		private string _name;
 		private int _health;
@@ -25,6 +27,7 @@ namespace Rhythm.Units {
 		private List<ItemDeposit> _depositsInSight;
 		private CommandData[] _commandData;
 		private CommandProvider[] _commandProviders;
+		private ToolData _toolData;
 		private BeatInputService _beatInputService;
 		private GameStateService _gameStateService;
 
@@ -39,6 +42,7 @@ namespace Rhythm.Units {
 			MovementSpeed = unitData.movementSpeed;
 			Owner = Constants.PLAYER_ID_PLAYER;
 			_unitId = ids++;
+			_toolData = unitData.toolData;
 			_commandData = unitData.commandData;
 			_commandProviders = new CommandProvider[_commandData.Length];
 			// TODO: handle unitData.WeaponData
@@ -72,6 +76,9 @@ namespace Rhythm.Units {
 		}
 
 		public void AddVisibleDeposit(ItemDeposit deposit) {
+			if (!deposit.CanBeCollectedBy(_toolData)) {
+				return;
+			}
 			for (int i = 0; i < _depositsInSight.Count; i++) {
 				if (Vector3.SqrMagnitude(transform.position - _depositsInSight[i].transform.position)
 				    > Vector3.SqrMagnitude(transform.position - deposit.transform.position)) {
@@ -83,6 +90,9 @@ namespace Rhythm.Units {
 		}
 
 		public void RemoveVisibleDeposit(ItemDeposit deposit) {
+			if (!deposit.CanBeCollectedBy(_toolData)) {
+				return;
+			}
 			_depositsInSight.Remove(deposit);
 		}
 
@@ -91,8 +101,8 @@ namespace Rhythm.Units {
 		}
 
 		private IEnumerator WalkThroughFinishLine() {
-			Renderer curRenderer = GetComponent<Renderer>();
-			while (curRenderer.isVisible) {
+			Renderer[] curRenderer = GetComponentsInChildren<Renderer>();
+			while (curRenderer.All(cur => cur.isVisible)) {
 				transform.Translate(MovementSpeed * Time.deltaTime * Vector2.up);
 				yield return null;
 			}
@@ -122,7 +132,7 @@ namespace Rhythm.Units {
 			_updateFunc = DropUpdate;
 		}
 
-		private void ExecutionFinishing(Song song) {
+		private void ExecutionFinishing(Song song, int streakPower) {
 			_updateFunc = Constants.Noop;
 		}
 		

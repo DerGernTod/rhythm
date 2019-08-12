@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bc4c7cfaac234ffca1180f7309020872, type: 3}
-  m_Name: ToolTypeAxe
+  m_Name: ToolTypePick
   m_EditorClassIdentifier: 
-  toolTypeName: Axe
-  toolTypeDescription: Lumberjack's finest. Helps you chop down wood.
-  sprite: {fileID: 21300000, guid: c7f49770d47d9a7439754fad09c1db4d, type: 3}
+  toolTypeName: Pick
+  toolTypeDescription: Pick a pick to smash some rocks.
+  sprite: {fileID: 21300000, guid: 8884cdbbf02c1ab40856e48d5bbce339, type: 3}

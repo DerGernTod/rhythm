@@ -1,4 +1,5 @@
 ﻿using System;
+using Rhythm.Levels;
 using Rhythm.Utils;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,6 +15,7 @@ namespace Rhythm.Services {
         private IUpdateableService[] updateableServices;
 
         [FormerlySerializedAs("startScene")] [SerializeField] private BuildScenes startBuildScene;
+        [SerializeField] private LevelData startLevel;
 #pragma warning restore 0649
         
         private void Awake() {
@@ -46,7 +48,7 @@ namespace Rhythm.Services {
             foreach (object sceneIndex in sceneIndices) {
                 string sceneName = Enum.GetName(typeof(BuildScenes), sceneIndex);
                 string scenePath = SceneUtility.GetScenePathByBuildIndex((int)sceneIndex);
-                // ReSharper disable once PossibleNullReferenceException
+                // ReSharper disable once AssignNullToNotNullAttribute
                 if (!scenePath.Contains(sceneName) && !"None".Equals(sceneName)) {
                     Debug.LogError("Build index '" + sceneIndex + "' of scene doesn't match! Expected " + sceneName + " to be part of path " + scenePath);
                     errorCount++;
@@ -60,7 +62,9 @@ namespace Rhythm.Services {
         }
 
         private void Start() {
-            Get<GameStateService>().TriggerSceneTransition(startBuildScene);
+            GameStateService gameStateService = Get<GameStateService>();
+            gameStateService.CurrentLevelData = startLevel;
+            gameStateService.TriggerSceneTransition(startBuildScene);
         }
 
         private void Update() {

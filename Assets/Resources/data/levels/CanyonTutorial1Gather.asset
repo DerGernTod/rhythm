@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   backgroundSprite: {fileID: 21300000, guid: 90988d74431cb32448110c7086cd247b, type: 3}
   depositProbability:
-  - deposit: {fileID: 11400000, guid: fb99213e2f07e8847aa13640b979f58b, type: 2}
+  - deposit: {fileID: 11400000, guid: dd30c8129557ce8458d4df7e33a2090a, type: 2}
     min: 2
     max: 8
   - deposit: {fileID: 11400000, guid: a9514c1dbc3d3ac42af771d7bd8cd36e, type: 2}

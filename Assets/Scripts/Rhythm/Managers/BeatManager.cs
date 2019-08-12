@@ -31,8 +31,7 @@ namespace Rhythm.Managers {
 		private Action _update = Constants.Noop;
 		private Vector3 _initialIndicatorPos;
 		private bool _isExecutingSong;
-		private int _prevStreak;
-		private int _streakScore;
+		private int _prevStreakPower;
 		private int _streakPower;
 		private readonly Hashtable _overlayFadeHashtable = new Hashtable {
 			{ "from", .5f },
@@ -93,10 +92,18 @@ namespace Rhythm.Managers {
 			_initialIndicatorPos = songIndicator.transform.position;
 		}
 
-		private void ExecutionStarting(Song song) {
+		private void ExecutionStarting(Song song, int streakPower) {
+			if (streakPower > _prevStreakPower) {
+				StartCoroutine(Coroutines.FadeTo(streakText.GetComponent<CanvasGroup>(), 1,
+					BeatInputService.HALF_NOTE_TIME));
+				streakText.SetGradient(streakPowerGradients[streakPower - 1]);
+				streakText.TriggerImpulse();
+			}
+
+			_prevStreakPower = streakPower;
 		}
 
-		private void ExecutionAborted(Song obj) {
+		private void ExecutionAborted(Song obj, int streakPower) {
 			GameObject songTextGo = songIndicator.gameObject;
 			_songIndicatorFadeHashtable["onupdate"] = CreateFadeDelegate(songIndicator);
 			songTextGo.transform.position = _initialIndicatorPos;
@@ -107,7 +114,7 @@ namespace Rhythm.Managers {
 			_isExecutingSong = false;
 		}
 
-		private void ExecutionStarted(Song song) {
+		private void ExecutionStarted(Song song, int streakPower) {
 			songIndicator.text = song.Name.ToUpper();
 			_beatInputService.MetronomeTick += MetronomeTickSongIndicator;
 			_isExecutingSong = true;
@@ -124,10 +131,10 @@ namespace Rhythm.Managers {
 			c.a = 1;
 			songIndicator.color = c;
 			iTween.Stop(songTextGo);
-			iTween.PunchPosition(songTextGo, Vector3.up * Screen.height / 20f, BeatInputService.NOTE_TIME * .9f);
+			iTween.PunchPosition(songTextGo, Vector3.up * (Screen.height / 20f), BeatInputService.NOTE_TIME * .9f);
 		}
 
-		private void ExecutionFinished(Song obj) {
+		private void ExecutionFinished(Song obj, int streakPower) {
 			GameObject songTextGo = songIndicator.gameObject;
 			_songIndicatorFadeHashtable["onupdate"] = CreateFadeDelegate(songIndicator);
 			songTextGo.transform.position = _initialIndicatorPos;
@@ -141,8 +148,7 @@ namespace Rhythm.Managers {
 		private void OnGameStarted() {
 			_update = Constants.Noop;
 			_isExecutingSong = false;
-			_prevStreak = 0;
-			_streakScore = 0;
+			_prevStreakPower = 0;
 			_streakPower = 0;
 			_beatInputService.MetronomeTick += MetronomeTick;
 			streakText.StartAnimation();
@@ -171,10 +177,8 @@ namespace Rhythm.Managers {
 			_beatInputService.ExecutionFinished -= ExecutionFinished;
 		}
 
-		private void NoteHit(NoteQuality quality, float diff, int streak) {
+		private void NoteHit(NoteQuality quality, float diff) {
 			updateClickLocation();
-			int score = (int)quality;
-			_streakScore += score;
 			Image hitImage;
 			if (quality == NoteQuality.Bad) {
 				hitImage = diff > 0 ? hitEarly : hitLate;
@@ -188,17 +192,6 @@ namespace Rhythm.Managers {
 			hitImageGo.transform.position = Vector2.Lerp(center, _latestTouchPosition, .5f);
 			iTween.PunchScale(hitImageGo, _punchScaleHashtable);
 			iTween.ValueTo(hitImageGo, _beatHitFadeHashtable);
-			if (streak > _prevStreak) {
-				int prevStreakPower = _streakPower;
-				_streakPower = Mathf.Min(_streakScore / Constants.REQUIRED_STREAK_SCORE, Constants.MAX_STREAK_POWER);
-				if (_streakPower > prevStreakPower) {
-					StartCoroutine(Coroutines.FadeTo(streakText.GetComponent<CanvasGroup>(), 1,
-						BeatInputService.HALF_NOTE_TIME));
-					streakText.SetGradient(streakPowerGradients[_streakPower - 1]);
-					streakText.TriggerImpulse();
-				}
-			}
-			_prevStreak = streak;
 		}
 
 		private void BeatLost() {
@@ -211,7 +204,6 @@ namespace Rhythm.Managers {
 			hitImageGo.transform.position = Vector2.Lerp(center, _latestTouchPosition, .5f);
 			iTween.MoveBy(hitImageGo, _moveDownHashtable);
 			iTween.ValueTo(hitImageGo, _beatHitFadeHashtable);
-			_streakScore = 0;
 			_streakPower = 0;
 			StartCoroutine(Coroutines.FadeTo(streakText.GetComponent<CanvasGroup>(), 0,
 				BeatInputService.HALF_NOTE_TIME));

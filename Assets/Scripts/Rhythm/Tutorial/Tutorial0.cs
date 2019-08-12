@@ -62,16 +62,20 @@ namespace Rhythm.Tutorial {
             }
         }
 
-        private void OnExecutionStarted(Song song) {
+        private void OnExecutionStarted(Song song, int streakPower) {
             _isExecutingSong = true;
             _drumIndex = 3;
             _beatInputService.MetronomeTick += MetronomeTick;
             
         }
 
-        private void OnExecutionFinished(Song song) {
+        private void OnExecutionFinished(Song song, int streakPower = 0) {
             _isExecutingSong = false;
             _beatInputService.MetronomeTick -= MetronomeTick;
+            Debug.Log("Execution finished with streakpower " + streakPower);
+            if (streakPower == 3) {
+                FinishTutorial();
+            }
             
         }
 
@@ -79,7 +83,7 @@ namespace Rhythm.Tutorial {
             HandleFail();
         }
 
-        private void OnNoteHit(NoteQuality quality, float diff, int streak) {
+        private void OnNoteHit(NoteQuality quality, float diff) {
             if (quality != NoteQuality.Miss) {
                 iTween.PunchRotation(mood.gameObject, 30f * (_moodDirection ? 1 : -1) * Vector3.forward, BeatInputService.NOTE_TIME * .9f);
                 _moodDirection = !_moodDirection;
@@ -87,9 +91,6 @@ namespace Rhythm.Tutorial {
                 if (_successCount >= 4) {
                     _successCount = 0;
                     SetMoodSpriteIndex(_moodIndex + 1);
-                    if (streak == 3) {
-                        FinishTutorial();
-                    }
                 }
             } else {
                 HandleFail();

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52de0c121cf8b9543bf557ef781e09e3, type: 3}
   m_Name: Rock1
   m_EditorClassIdentifier: 
-  sprite: {fileID: 21300000, guid: 18de673440d26d041aff807d3b5ef74c, type: 3}
-  depositSprite: {fileID: 21300000, guid: 6984defe9f993e340a3917812b78c019, type: 3}
-  itemName: Broken Log
+  sprite: {fileID: 21300000, guid: caaf8fe9f0d023d43bf212436c3141e4, type: 3}
+  depositSprite: {fileID: 21300000, guid: 403633ba8ff63ef438d5fbd7410cefb7, type: 3}
+  itemName: Broken Rock
   amount: 1
-  requiredTier: {fileID: 11400000, guid: 14ad3fb63487b35498a52d212de6fe41, type: 2}
-  requiredToolType: {fileID: 11400000, guid: e5a01f1d41cd13544acbd2b8dd73ea28, type: 2}
+  requiredTier: {fileID: 11400000, guid: ca13de10642dc0448808858542f3010e, type: 2}
+  requiredToolType: {fileID: 11400000, guid: 2b18bda759b7e374e806f41d70902950, type: 2}

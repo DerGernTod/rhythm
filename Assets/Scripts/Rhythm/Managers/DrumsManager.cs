@@ -9,7 +9,6 @@ namespace Rhythm.Managers {
         [SerializeField] private AudioClip badClip;
         [SerializeField] private AudioClip goodClip;
         [SerializeField] private AudioClip perfectClip;
-        [SerializeField] private AudioClip startClip;
 #pragma warning restore 0649
         private QualityClipDictionary clips;
         private BeatInputService _beatInputService;
@@ -34,7 +33,7 @@ namespace Rhythm.Managers {
             ServiceLocator.Get<AudioService>().PlayOneShot(clips[NoteQuality.Miss]);
         }
         
-        private void NoteHit(NoteQuality quality, float diff, int streak) {
+        private void NoteHit(NoteQuality quality, float diff) {
             ServiceLocator.Get<AudioService>().PlayOneShot(clips[quality]);
         }
     }

@@ -14,7 +14,7 @@ namespace Rhythm.Units {
 			ServiceLocator.Get<BeatInputService>().NoteHit += NoteHit;
 		}
 
-		private void NoteHit(NoteQuality arg1, float diff, int streak) {
+		private void NoteHit(NoteQuality arg1, float diff) {
 			_animator.SetTrigger(nextAnim);
 			nextAnim = nextAnim == LeftPerfect ? RightPerfect : LeftPerfect;
 		}
