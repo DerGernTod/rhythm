@@ -4,10 +4,10 @@ using UnityEngine;
 
 namespace Rhythm.Commands {
     public abstract class CommandProvider: MonoBehaviour {
-        protected Unit _unit;
+        protected Unit unit;
 
-        public void RegisterUnit(Unit unit) {
-            _unit = unit;
+        public void RegisterUnit(Unit regUnit) {
+            unit = regUnit;
         }
         public abstract void ExecutionFinished();
         public abstract void Executed(NoteQuality noteQuality, int streak);

@@ -2,12 +2,14 @@
 using System.Linq;
 using Rhythm.Services;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Rhythm.Songs {
     public class Song {
-        public event Action<NoteQuality, int> CommandExecuted;
-        public event Action CommandExecutionFinished;
-        public event Action CommandExecutionUpdate;
+        public event UnityAction<NoteQuality, int> CommandExecuted;
+        public event UnityAction CommandExecutionFollowupUpdate;
+        public event UnityAction CommandExecutionFinished;
+        public event UnityAction CommandExecutionUpdate;
         public string Name { get; }
         private readonly float[] _beats;
         private readonly AudioClip[][] _clips;

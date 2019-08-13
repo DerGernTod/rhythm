@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using Rhythm.Items;
 using Rhythm.Services;
 using Rhythm.Units;
@@ -7,9 +9,20 @@ using UnityEngine;
 namespace Rhythm.Commands {    
     public class GatherCommandProvider: CommandProvider {
         private ItemDeposit _closestDeposit;
-        private int curStreakPower = 0;
+        private int curStreakPower;
+        private Vector3 initPosition;
         public override void ExecutionFinished() {
-            // if target still has health, keep it
+            StartCoroutine(MoveToInitPos());
+        }
+
+        private IEnumerator MoveToInitPos() {
+            float curTime = 0;
+            while (curTime < BeatInputService.NOTE_TIME * 2f) {
+                curTime += Time.deltaTime;
+                Vector3 dir = initPosition - unit.transform.position;
+                unit.transform.Translate(Time.deltaTime * unit.MovementSpeed * dir.normalized);
+                yield return null;
+            }
         }
 
         public override void Executed(NoteQuality noteQuality, int streak) {
@@ -19,22 +32,23 @@ namespace Rhythm.Commands {
             if (_closestDeposit) {
                 _closestDeposit.DepositDepleted -= DepositDepleted;
             }
-            _closestDeposit = _unit.GetClosestDeposit();
+            _closestDeposit = unit.GetClosestDeposit();
             if (_closestDeposit) {
                 _closestDeposit.DepositDepleted += DepositDepleted;
             }
 
             curStreakPower = streak;
+            initPosition = unit.transform.position;
         }
 
         private void DepositDepleted() {
-            _unit.RemoveVisibleDeposit(_closestDeposit);
+            unit.RemoveVisibleDeposit(_closestDeposit);
             UpdateClosestDeposit();
         }
 
         private void UpdateClosestDeposit() {
-            Debug.Log(Time.time + ": " + _unit.name + " searching for new deposit");
-            _closestDeposit = _unit.GetClosestDeposit();
+            Debug.Log(Time.time + ": " + unit.name + " searching for new deposit");
+            _closestDeposit = unit.GetClosestDeposit();
             if (_closestDeposit) {
                 _closestDeposit.DepositDepleted += DepositDepleted;
             }
@@ -45,13 +59,13 @@ namespace Rhythm.Commands {
                 return;
             }
 
-            Vector3 direction = _closestDeposit.transform.position - _unit.transform.position;
+            Vector3 direction = _closestDeposit.transform.position - unit.transform.position;
             if (direction.sqrMagnitude > .35f) {
-                float speed = _unit.MovementSpeed + _unit.MovementSpeed * curStreakPower / Constants.MAX_STREAK_POWER;
-                _unit.transform.Translate(Time.deltaTime * speed * direction.normalized);
+                float speed = unit.MovementSpeed + unit.MovementSpeed * curStreakPower / Constants.MAX_STREAK_POWER;
+                unit.transform.Translate(Time.deltaTime * speed * direction.normalized);
             } else {
                 float dps = 1 * Time.deltaTime;
-                _closestDeposit.Collect(_unit, dps + dps * curStreakPower / Constants.MAX_STREAK_POWER);
+                _closestDeposit.Collect(unit, dps + dps * curStreakPower / Constants.MAX_STREAK_POWER);
             }
             // move to target deposit and gather until empty, then move to next deposit if available and continue
         }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Rhythm.Data;
 using Rhythm.Levels;
 using Rhythm.Managers;
@@ -12,6 +14,8 @@ using UnityEngine.UI;
 
 namespace Rhythm.State {
     public class IngameState : MonoBehaviour {
+        private const int NUM_SUMMARY_ROWS = 3;
+        private const int NUM_SUMMARY_COLUMNS = 3;
         
 #pragma warning disable 0649
         [SerializeField] private Text countdownText;
@@ -64,25 +68,45 @@ namespace Rhythm.State {
             float finishTime = Time.time - startTime;
             TimeSpan fromMilliseconds = TimeSpan.FromSeconds(finishTime);
             timeText.text = fromMilliseconds.Minutes + ":" + fromMilliseconds.Seconds;
+            StartCoroutine(AnimateSummary());
             StartCoroutine(Coroutines.FadeTo(finishText.GetComponent<CanvasGroup>(), 1, BeatInputService.NOTE_TIME));
-            StartCoroutine(Coroutines.FadeTo(summaryCanvas.GetComponent<CanvasGroup>(), 1, BeatInputService.NOTE_TIME));
-            int count = 0;
-            Rect summaryPanelRect = collectedItemsPanel.rect;
-            float columnWidth = summaryPanelRect.width / 3f;
-            float rowHeight = summaryPanelRect.height / 3f;
-            foreach (ItemData levelCollectedItem in _level.CollectedItems) {
-                int row = count / 3;
-                int column = count % 3;
-                RectTransform collectedItem = Instantiate(collectedItemPrefab, collectedItemsPanel);
-                collectedItem.anchoredPosition = new Vector2(column * columnWidth, (2 - row) * rowHeight);
-                collectedItem.GetComponentInChildren<Image>().sprite = levelCollectedItem.sprite;
-                collectedItem.GetComponentInChildren<Text>().text = "1";
-                count++;
-            }
-            iTween.MoveFrom(summaryCanvas.gameObject, new Vector3(Screen.width * .5f, Screen.height * .5f, 0), 1);
+
             iTween.MoveFrom(finishText.gameObject, new Vector3(Screen.width * .5f, Screen.height * .5f, 0), 1);
             finishText.StartAnimation();
             finishText.TriggerImpulse();
+        }
+
+        private IEnumerator AnimateSummary() {
+            yield return new WaitForSeconds(.5f);
+            iTween.MoveFrom(summaryCanvas.gameObject, new Vector3(Screen.width * .5f, Screen.height * .5f, 0), 1);
+            StartCoroutine(Coroutines.FadeTo(summaryCanvas.GetComponent<CanvasGroup>(), 1, BeatInputService.NOTE_TIME));
+            yield return new WaitForSeconds(1f);
+            Rect summaryPanelRect = collectedItemsPanel.rect;
+            float columnWidth = summaryPanelRect.width / NUM_SUMMARY_COLUMNS;
+            float rowHeight = summaryPanelRect.height / NUM_SUMMARY_ROWS;
+            Dictionary<ItemData, int> dict =
+                _level.CollectedItems.Aggregate(new Dictionary<ItemData, int>(), (curDict, item) => {
+                    int amount;
+                    curDict.TryGetValue(item, out amount);
+                    amount++;
+                    curDict[item] = amount;
+                    return curDict;
+                });
+            int count = 0;
+            foreach (KeyValuePair<ItemData, int> keyValuePair in dict) {
+                int row = count / NUM_SUMMARY_COLUMNS;
+                int column = count % NUM_SUMMARY_COLUMNS;
+                RectTransform collectedItem = Instantiate(collectedItemPrefab, collectedItemsPanel);
+                collectedItem.anchoredPosition = new Vector2(column * columnWidth, (NUM_SUMMARY_ROWS - 1 - row) * rowHeight);
+                collectedItem.GetComponentInChildren<Image>().sprite = keyValuePair.Key.sprite;
+                collectedItem.GetComponentInChildren<Text>().text = keyValuePair.Value + "";
+                CanvasGroup canvasGroup = collectedItem.GetComponent<CanvasGroup>();
+                canvasGroup.alpha = 0;
+                StartCoroutine(Coroutines.FadeTo(canvasGroup, 1, .25f));
+                iTween.ScaleFrom(collectedItem.gameObject, Vector3.one * 1.5f, .5f);
+                yield return new WaitForSeconds(.5f);
+                count++;
+            }
         }
 
         private void OnDestroy() {

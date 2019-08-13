@@ -205,13 +205,14 @@ namespace Rhythm.Services {
             _currentNotes.Clear();
             _currentQualities.Clear();
             _beatStarterEnabled = false;
+            int streakPower = _streakPower;
             _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(time, () => {
                 if (_currentSong != null) {
                     _currentSong.FinishCommandExecution();
-                    ExecutionFinishing?.Invoke(_currentSong, _streakPower);
+                    ExecutionFinishing?.Invoke(_currentSong, streakPower);
                     Song activeSong = _currentSong;
                     _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(HALF_NOTE_TIME, () => {
-                        ExecutionFinished?.Invoke(activeSong, _streakPower);
+                        ExecutionFinished?.Invoke(activeSong, streakPower);
                         EnableTouchHandler();
                     }));
                 }
@@ -296,12 +297,13 @@ namespace Rhythm.Services {
             _streakScore += _currentQualities.Aggregate(0, (total, curQuality) => total + (int) curQuality);
             _streakPower = Mathf.Min(_streakScore / Constants.REQUIRED_STREAK_SCORE, Constants.MAX_STREAK_POWER);
             _currentSong = matchingSong;
-            _currentSong.ExecuteCommand(hitNoteQuality, _streakPower);
+            int curStreakPower = _streakPower;
+            _currentSong.ExecuteCommand(hitNoteQuality, curStreakPower);
             _coroutineProvider.StartCoroutine(Coroutines.ExecuteAfterSeconds(HALF_NOTE_TIME, () => {
-                ExecutionStarted?.Invoke(matchingSong, _streakPower);
+                ExecutionStarted?.Invoke(matchingSong, curStreakPower);
                 DisableTouchHandler();
             }));
-            ExecutionStarting?.Invoke(_currentSong, _streakPower);
+            ExecutionStarting?.Invoke(_currentSong, curStreakPower);
             _currentCommandUpdate = _currentSong.ExecuteCommandUpdate;
             ResetBeatAfterSeconds(NOTE_TIME * 4);
         }
