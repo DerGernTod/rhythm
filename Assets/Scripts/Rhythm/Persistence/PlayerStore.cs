@@ -11,17 +11,19 @@ namespace Rhythm.Persistence {
     
     [Serializable]
     public class PlayerStore {
-        [field:NonSerialized]
-        public event Action<string> OnSongLearned;
-        [field:NonSerialized]
-        private ItemDictionary _itemInventory;
+        [field:NonSerialized] public event Action<string> OnSongLearned;
+        [field:NonSerialized] public event Action<ItemData> OnItemDiscovered;
+        [field:NonSerialized] private ItemDictionary _itemInventory;
+        [field:NonSerialized] private List<ItemData> _knownItems;
 
+        private readonly List<string> _knownItemsData;
         private readonly List<string> _itemInventoryData;
         private readonly List<int> _itemInventoryAmount;
         public List<string> KnownSongs { get; }
         public string Name { get; }
 
         public ItemDictionary ItemInventory => _itemInventory;
+        public List<ItemData> KnownItems => _knownItems;
 
         public PlayerStore(string name) {
             Name = name;
@@ -29,6 +31,8 @@ namespace Rhythm.Persistence {
             _itemInventory = new ItemDictionary();
             _itemInventoryData = new List<string>();
             _itemInventoryAmount = new List<int>();
+            _knownItems = new List<ItemData>();
+            _knownItemsData = new List<string>();
         }
 
         [OnDeserialized]
@@ -37,19 +41,32 @@ namespace Rhythm.Persistence {
             for (int i = 0; i < _itemInventoryData.Count; i++) {
                 _itemInventory[AssetDatabase.LoadAssetAtPath<ItemData>(_itemInventoryData[i])] = _itemInventoryAmount[i];
             }
+            _knownItems = new List<ItemData>();
+            foreach (string itemDataPath in _knownItemsData) {
+                _knownItems.Add(AssetDatabase.LoadAssetAtPath<ItemData>(itemDataPath));
+            }
         }
 
         [OnSerializing]
         private void OnSerializing(StreamingContext stream) {
             _itemInventoryData.Clear();
             _itemInventoryAmount.Clear();
+            _knownItemsData.Clear();
             foreach (KeyValuePair<ItemData,int> keyValuePair in _itemInventory) {
                 _itemInventoryData.Add(AssetDatabase.GetAssetPath(keyValuePair.Key));
                 _itemInventoryAmount.Add(keyValuePair.Value);
             }
+
+            foreach (ItemData knownItem in _knownItems) {
+                _knownItemsData.Add(AssetDatabase.GetAssetPath(knownItem));
+            }
         }
 
         public void AddItems(ItemData item, int amount) {
+            if (!_knownItems.Contains(item)) {
+                OnItemDiscovered?.Invoke(item);
+                _knownItems.Add(item);
+            }
             int curAmount;
             ItemInventory.TryGetValue(item, out curAmount);
             curAmount += amount;
@@ -67,6 +84,10 @@ namespace Rhythm.Persistence {
                     ItemInventory[item] = curAmount;
                 }
             }
+        }
+
+        public bool HasDiscoveredItem(ItemData item) {
+            return _knownItems.Contains(item);
         }
 
         public int GetItemAmount(ItemData item) {

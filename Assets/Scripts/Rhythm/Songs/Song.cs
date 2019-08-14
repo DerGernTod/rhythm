@@ -7,7 +7,6 @@ using UnityEngine.Events;
 namespace Rhythm.Songs {
     public class Song {
         public event UnityAction<NoteQuality, int> CommandExecuted;
-        public event UnityAction CommandExecutionFollowupUpdate;
         public event UnityAction CommandExecutionFinished;
         public event UnityAction CommandExecutionUpdate;
         public string Name { get; }

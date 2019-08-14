@@ -150,6 +150,8 @@ namespace Rhythm.Utils.Editor {
                     }
                     EditorGUI.indentLevel--;
                 }
+                
+                EditorGUILayout.LabelField("Known Items", string.Join(", ", currentPlayer.KnownItems));
             }
             EditorGUI.indentLevel--;
         }
