@@ -71,8 +71,6 @@ Camp buildings are built, used and upgraded during meta game. Resources are requ
 ##### How it works
 The camp is displayed in a bird's eye view. New buildings can be built freely by tapping onto an empty space and selecting the building one want to build. If there are too many buildings, the view zooms out a bit to reveal more areas (maybe scrolling around is better, have to try...). In the beginning, only the cottage can be built. Later, research hut, instrument builder, blacksmith, hunter's hut, kitchen, training area and more follow. The buildings can be used to improve the units' performance on the field and enable new abilities when using the different songs.
 
-![Overworld](gdd/gdd-overworld.jpg)
-
 #### Crafting & Resource Management
 ##### Details
 The first thing the player wants to craft is an axe to chop wood. To be able to craft this, they need to collect sticks and stones. Some resources require units to wield special items, e.g. chopping wood requires a unit to wield an axe. Back in the camp, resources can be used to craft items. Crafting items requires different buildings although there are some starting items that can just be crafted "at the campfire" (like the axe).
@@ -151,7 +149,67 @@ TODO
 There should always be a possibility to leave a level. Mobile players are fast-paced and want to be able to quit on demand (without losing too much). So a level can be quit two ways: either by leaving it via the menu (or closing the app), or by playing the _retreat song_. While the first makes the player lose all progress, the _retreat song_ ends the level with all the collected experience and items.
 
 #### Overworld interactions
+The overworld is mainly an overview over all the levels. It's devided into sections, where each section represents a level. The sections are aligned on an infinitely expanding circle that grows larger the more levels there are for selection. The leftmost section is always the camp. The player can always see a single section, and the end of the previous and beginning of the next section. Navigation happens via swipe and snap. The player can swipe indefinitely and the camera will snap on the last section that's visible when the swipe velocity is under a certain threshold. Sections can also be switched by tapping the next or previous one.
+
+![Overworld](gdd/gdd-overworld.jpg)
+
+If the section is a level, it shows:
+* name of the level
+* setting background (e.g. grasslands, forest, mountains, ...)
+* setting foreground (e.g. green fields, trees, hills, ...)
+Moods for this are drawn from the game Reus by Abbey Games:
+![Reus](https://images.igdb.com/igdb/image/upload/t_screenshot_big/zbqoot3f1uyi7zz5eteb.jpg)
+* current squad in walk animation towards the level
+* known and unknown resources that can be collected in this level (resources that can't be collected by the current squad are highlighted somehow (red/gray))
+* possible amount of these resources (more icons means more deposits)
+* highscores (collection, time)
+* (while scrolling?) a "Go to beginning" button that scrolls back to the camp
+* (while scrolling?) a "Go to end" button that scrolls to the newest level
+* a "March" button that starts the level
+
+If the section is the camp, it shows:
+* an "Options" button on the top right
+* a preview of the current state of the camp
+* current squad in walk animation towards the camp
+* a "Go to end" button that scrolls to the newest level
+* a "March" button that enters the town
+
+The options button shows a popup with the following possibilities:
+* Beat helper volume (default: 50%)
+* Beat indicator display (always show, only show if no song is active, never show)
+* Delete player data (with "are you sure", returns back to main screen)
+* Notification settings (which notifications do we want? TODO)
+* Quit (returns back to main screen)
+
 #### Camp interactions
+Interactions on the camp screen itself:
+* leave camp
+* create building
+* enter building
+* move camera
+
+The main interactions are with the buildings. In the beginning, the only building is a fireplace. Additional buildings can be added by tapping on a build button (which shows buildings that can and can't be built, and the required resources), tapping on a buildable building, then moving it to a free location in the camp.
+
+* __Fireplace__
+Craft simple tier1 tools, such as an axe and a pick.
+
+* __Barracks__
+Upgrade and equip units with weapons and tools. Upgrade barracks to improve all units stats.
+
+* __Workshop__
+Craft new units. Upgrade to craft more advanced ones.
+
+* __Blacksmith__
+Smelt ores and craft more advanced tools and weapons. Upgrade blacksmith to increase possibilities.
+
+* __House(?)__
+Houses characters. Upgrade to house more and increase squad size.
+
+* __Library__
+Research advancements. Researches enables special weapons, abilities or unit types, or unlock buildings and building upgrades.
+
+* __Graveyard__
+If a unit dies, its grave is shown here. Spending $$ or very rare items revives a fallen unit.
 
 ## Assets Needed
 ### Graphics
@@ -160,7 +218,7 @@ There should always be a possibility to leave a level. Mobile players are fast-p
 * Popup panels
 * Buttons with text
 * Buttons with icons
-* * Yes/No or ✓/✘
+  * Yes/No or ✓/✘
 * Equipment screens
 * Squad selection screens
 * Crafting screens
@@ -194,7 +252,7 @@ We're starting with _Axe_ and _Pick_. All tools should have an icon representati
 * hands (no ingame representation)
 * TODO
 #### Weapons
-See (Tools section)[#user-content-tools]
+See (Tools section)[#tools]
 * sword
 * bow
 * spear
