@@ -4,12 +4,13 @@ using Rhythm.Services;
 using Rhythm.Units;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Rhythm.Levels {
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
     public class FinishLine : MonoBehaviour {
-        private Action _update = Constants.Noop;
+        private UnityAction _update = Constants.Noop;
         private SpriteRenderer _renderer;
         private Collider2D _collider;
         private UnitService _unitService;
@@ -49,7 +50,7 @@ namespace Rhythm.Levels {
 
         private void CheckUnitProximity() {
             foreach (Unit unit in _units) {
-                if (unit.Owner == Constants.PLAYER_ID_PLAYER &&
+                if (unit.Owner == OwnerType.PLAYER &&
                     unit.GetComponent<Collider2D>().Distance(_collider).isOverlapped) {
                     _update = Constants.Noop;
                     ServiceLocator.Get<GameStateService>().TriggerGameFinishing();

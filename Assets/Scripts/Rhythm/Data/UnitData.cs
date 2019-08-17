@@ -1,6 +1,6 @@
-﻿using Rhythm.Tools;
+﻿using Rhythm.Data;
+using Rhythm.Tools;
 using Rhythm.Units;
-using Rhythm.Weapons;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -10,9 +10,9 @@ namespace Rhythm.Data {
         [FormerlySerializedAs("Health")] public int health;
         [FormerlySerializedAs("MovementSpeed")] public float movementSpeed;
         [FormerlySerializedAs("WeaponData")] public WeaponData weaponData;
+        public ToolData toolData;
         // TODO: graphics
         [FormerlySerializedAs("Prefab")] public Unit prefab;
         [FormerlySerializedAs("CommandData")] public CommandData[] commandData;
-        public ToolData toolData;
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using Rhythm.Services;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -12,7 +13,7 @@ namespace Rhythm.Utils {
 #pragma warning restore 0649
         
         private GameStateService _gameStateService;
-        private Action _update = Constants.Noop;
+        private UnityAction _update = Constants.Noop;
         private float _sinTime;
         private void Start() {
             _gameStateService = ServiceLocator.Get<GameStateService>();

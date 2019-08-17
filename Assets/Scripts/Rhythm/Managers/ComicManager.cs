@@ -2,6 +2,7 @@ using System;
 using Rhythm.UI;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Rhythm.Managers {
     public class ComicManager : MonoBehaviour {
@@ -11,7 +12,7 @@ namespace Rhythm.Managers {
         
         private ComicPage[] _pages;
         private int _pageIndex;
-        private Action _update;
+        private UnityAction _update;
         private Coroutine _nextTimer;
         private void Start() {
             _pages = GetComponentsInChildren<ComicPage>();

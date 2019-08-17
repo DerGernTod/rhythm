@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Rhythm.UI {
     [RequireComponent(typeof(CanvasGroup))]
@@ -9,7 +10,7 @@ namespace Rhythm.UI {
         private CanvasGroup _canvasGroup;
         private ComicPanel[] _panels;
         private int _curPanelIndex;
-        private Action _destroy = Constants.Noop;
+        private UnityAction _destroy = Constants.Noop;
         
         public event Action AllPanelsShowComplete;
         public event Action FadeOutComplete;

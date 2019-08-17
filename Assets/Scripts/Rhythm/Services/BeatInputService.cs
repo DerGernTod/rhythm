@@ -4,6 +4,7 @@ using System.Linq;
 using Rhythm.Songs;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Rhythm.Services {
     [Serializable]
@@ -46,10 +47,10 @@ namespace Rhythm.Services {
         private readonly List<NoteQuality> _currentQualities = new List<NoteQuality>();
         private readonly MonoBehaviour _coroutineProvider;
         private Song _currentSong;
-        private Action _currentCommandUpdate = Constants.Noop;
-        private Action<float> _update = Constants.NoopFloat;
-        private Action _fixedUpdate = Constants.Noop;
-        private Action _beatInputHandler = Constants.Noop;
+        private UnityAction _currentCommandUpdate = Constants.Noop;
+        private UnityAction<float> _update = Constants.NoopFloat;
+        private UnityAction _fixedUpdate = Constants.Noop;
+        private UnityAction _beatInputHandler = Constants.Noop;
         
         public BeatInputService(MonoBehaviour coroutineProvider) {
             _coroutineProvider = coroutineProvider;

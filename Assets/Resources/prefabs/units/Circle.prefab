@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 212639429722619432}
   - component: {fileID: -6523995278877896092}
   - component: {fileID: -2406307846690536950}
+  - component: {fileID: 8279842620522060327}
   m_Layer: 0
   m_Name: Circle
   m_TagString: Untagged
@@ -58,6 +59,7 @@ SpriteRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -109,3 +111,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6172fd6fdab40845b0eb468a56d8219, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  owner: 0
+  startupUnitData: {fileID: 0}
+--- !u!195 &8279842620522060327
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1542869470028994}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 0
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 1
+  m_BaseOffset: 0.5
+  m_WalkableMask: 1
+  m_ObstacleAvoidanceType: 4

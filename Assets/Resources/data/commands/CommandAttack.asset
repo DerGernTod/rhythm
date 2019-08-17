@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bc8f051385746e2bf34d24ca6056207, type: 3}
+  m_Name: CommandAttack
+  m_EditorClassIdentifier: 
+  song: {fileID: 11400000, guid: 0b2ebb8bc901a7f49b2c224a9ee9d8fc, type: 2}
+  commandProviderPrefab: {fileID: 5025089653475829754, guid: 0b37dcee61ef5f649bf46551051a00f7,
+    type: 3}

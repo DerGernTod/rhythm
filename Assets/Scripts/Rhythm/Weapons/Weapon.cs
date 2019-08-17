@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Rhythm.Data;
+using UnityEngine;
 
 namespace Rhythm.Weapons {
     public class Weapon : MonoBehaviour {

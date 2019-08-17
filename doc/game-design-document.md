@@ -252,7 +252,7 @@ We're starting with _Axe_ and _Pick_. All tools should have an icon representati
 * hands (no ingame representation)
 * TODO
 #### Weapons
-See (Tools section)[#tools]
+See [Tools section](#tools)
 * sword
 * bow
 * spear

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   health: 1
   movementSpeed: 1
-  weaponData: {fileID: 0}
+  weaponData: {fileID: 11400000, guid: 1474d91a03e49534fa5fcc5fc5fa6940, type: 2}
+  toolData: {fileID: 11400000, guid: 20e986316eb1d8c44b4ebe84cd7aa12e, type: 2}
   prefab: {fileID: 7587222798511506495, guid: 23cb61a4df26b5b44a185861b7377de0, type: 3}
   commandData:
   - {fileID: 11400000, guid: 74a7f7714674ccf4fa6d807efbc42138, type: 2}
-  toolData: {fileID: 11400000, guid: 20e986316eb1d8c44b4ebe84cd7aa12e, type: 2}

@@ -21,16 +21,18 @@ namespace Rhythm.Services {
         
         private void Awake() {
             BeatInputService beatInputService = new BeatInputService(this);
+            UnitService unitService = new UnitService();
             services = new ServiceDictionary {
                 { typeof(SongService), new SongService() },
                 { typeof(BeatInputService), beatInputService },
                 { typeof(AudioService), new AudioService(GetComponent<AudioSource>())},
-                { typeof(UnitService), new UnitService() },
+                { typeof(UnitService), unitService },
                 { typeof(GameStateService), new GameStateService() },
                 { typeof(PersistenceService), new PersistenceService() }
             };
             updateableServices = new IUpdateableService[] {
-                beatInputService
+                beatInputService,
+                unitService
             }; 
             VerifyBuildOrder();
 

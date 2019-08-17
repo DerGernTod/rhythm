@@ -5,6 +5,7 @@ using Rhythm.Songs;
 using Rhythm.Utils;
 using TheNode.UI;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -27,8 +28,8 @@ namespace Rhythm.Managers {
 		
 		private BeatImageDictionary _beatHitImages;
 		private Vector2 _latestTouchPosition;
-		private Action updateClickLocation;
-		private Action _update = Constants.Noop;
+		private UnityAction updateClickLocation;
+		private UnityAction _update = Constants.Noop;
 		private Vector3 _initialIndicatorPos;
 		private bool _isExecutingSong;
 		private int _prevStreakPower;

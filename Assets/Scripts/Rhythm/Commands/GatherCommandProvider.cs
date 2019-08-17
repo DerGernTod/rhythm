@@ -1,12 +1,10 @@
 using System.Collections;
-using System.Collections.Generic;
 using Rhythm.Items;
 using Rhythm.Services;
-using Rhythm.Units;
 using Rhythm.Utils;
 using UnityEngine;
 
-namespace Rhythm.Commands {    
+namespace Rhythm.Commands {
     public class GatherCommandProvider: CommandProvider {
         private ItemDeposit _closestDeposit;
         private int curStreakPower;
@@ -47,7 +45,6 @@ namespace Rhythm.Commands {
         }
 
         private void UpdateClosestDeposit() {
-            Debug.Log(Time.time + ": " + unit.name + " searching for new deposit");
             _closestDeposit = unit.GetClosestDeposit();
             if (_closestDeposit) {
                 _closestDeposit.DepositDepleted += DepositDepleted;

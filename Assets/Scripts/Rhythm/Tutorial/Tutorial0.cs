@@ -7,6 +7,7 @@ using Rhythm.UI;
 using Rhythm.Utils;
 using TheNode.UI;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -32,7 +33,7 @@ namespace Rhythm.Tutorial {
         private bool _isExecutingSong;
         private GameStateService _gameStateService;
         private int _drumIndex;
-        private Action _update = Constants.Noop;
+        private UnityAction _update = Constants.Noop;
         
         private void Start() {
             _beatInputService = ServiceLocator.Get<BeatInputService>();

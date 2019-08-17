@@ -9,15 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13b75c95f34a00d4e8c04f76b73312e6, type: 3}
-  m_Name: BeachLeftA
+  m_Script: {fileID: 11500000, guid: da26224975994755995ef2f3de0dfe24, type: 3}
+  m_Name: WeaponHands
   m_EditorClassIdentifier: 
-  m_AnimatedSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  m_MinSpeed: 1
-  m_MaxSpeed: 1
-  m_AnimationStartTime: 0
-  m_TileColliderType: 0
+  attackType: 0
+  targetType: 0
+  targetShape: []
+  damage: 1
+  tamageType: 0

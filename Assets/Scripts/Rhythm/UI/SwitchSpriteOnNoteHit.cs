@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using Rhythm.Services;
 using UnityEngine;
@@ -6,7 +5,9 @@ using UnityEngine;
 namespace Rhythm.UI {
     [RequireComponent(typeof(SpriteRenderer))]
     public class SwitchSpriteOnNoteHit : MonoBehaviour {
+#pragma warning disable 0649
         [SerializeField] private Sprite swapSprite;
+#pragma warning restore 0649
 
         private Sprite _originalSprite;
         private SpriteRenderer _spriteRenderer;

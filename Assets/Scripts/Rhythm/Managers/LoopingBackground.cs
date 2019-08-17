@@ -21,6 +21,7 @@ namespace Rhythm.Managers {
 			_levelData = levelData;
 			for (int i = 0; i < 3; i++) {
 				SpriteRenderer spriteRenderer = new GameObject("Background" + i).AddComponent<SpriteRenderer>();
+                spriteRenderer.sortingOrder = -4;
 				spriteRenderer.sprite = _levelData.backgroundSprite;
 				Transform transform1 = spriteRenderer.transform;
 				transform1.parent = transform;

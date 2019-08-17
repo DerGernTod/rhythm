@@ -5,6 +5,7 @@ using Rhythm.Services;
 using Rhythm.Songs;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace Rhythm.Tutorial {
@@ -21,7 +22,7 @@ namespace Rhythm.Tutorial {
         private GameStateService _gameStateService;
         private CanvasGroup _canvasGroup;
         private Coroutine _canvasGroupFadeCoroutine;
-        private Action _update = Constants.Noop;
+        private UnityAction _update = Constants.Noop;
         private int _metronomeTick = 2;
         private float _indicatorWidth;
         private float _quarterIndicatorWidth;

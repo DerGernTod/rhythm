@@ -1,4 +1,5 @@
 .idea/
+.vs/
 Assembly*.csproj
 Library/
 Packages/

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cae40f8909d4f1478bd3ef457c6628a, type: 3}
+  m_Name: CanyonDemoAllSongs
+  m_EditorClassIdentifier: 
+  backgroundSprite: {fileID: 21300000, guid: 90988d74431cb32448110c7086cd247b, type: 3}
+  depositProbability:
+  - deposit: {fileID: 11400000, guid: fb99213e2f07e8847aa13640b979f58b, type: 2}
+    min: 2
+    max: 8
+    minHealth: 1
+    maxHealth: 2
+  - deposit: {fileID: 11400000, guid: a9514c1dbc3d3ac42af771d7bd8cd36e, type: 2}
+    min: 2
+    max: 8
+    minHealth: 1
+    maxHealth: 2
+  length: 20

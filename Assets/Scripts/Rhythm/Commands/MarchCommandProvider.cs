@@ -1,15 +1,16 @@
 using System.Collections;
-using System.Collections.Generic;
 using Rhythm.Services;
-using Rhythm.Units;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.AI;
 
-namespace Rhythm.Commands {    
+namespace Rhythm.Commands {
     public class MarchCommandProvider: CommandProvider {
         private int streakPower;
         public override void ExecutionFinished() {
-            StartCoroutine(ContinueMovingForAWhile());
+            // StartCoroutine(ContinueMovingForAWhile());
+            unit.Agent.destination = unit.transform.position + Vector3.up * 2;
+            unit.Agent.speed = 0;
         }
 
         private IEnumerator ContinueMovingForAWhile() {
@@ -27,11 +28,23 @@ namespace Rhythm.Commands {
 
         public override void Executed(NoteQuality noteQuality, int streak) {
             streakPower = streak;
+            unit.Agent.speed = unit.MovementSpeed + CalcMovementSpeedBonus();
+            Vector3 dest = unit.transform.position + Vector3.up * 20;
+            unit.Agent.destination = dest;
+            if(unit.Agent.path.status != NavMeshPathStatus.PathComplete) {
+                NavMeshHit hit;
+                if (unit.Agent.Raycast(unit.Agent.destination, out hit)) {
+                    unit.Agent.destination = hit.position;
+                }
+            }
         }
 
         public override void CommandUpdate() {
-            float unitMovementSpeed = unit.MovementSpeed + unit.MovementSpeed * streakPower / Constants.MAX_STREAK_POWER;
-            unit.transform.Translate(Time.deltaTime * unitMovementSpeed * Vector3.up);
+            
+        }
+
+        private float CalcMovementSpeedBonus() {
+            return unit.MovementSpeed * streakPower / Constants.MAX_STREAK_POWER;
         }
     }
 }
