@@ -8,10 +8,10 @@ namespace Rhythm.Data {
 	[Serializable]
 	public struct DepositProbability {
 		public ItemData deposit;
-		public float min;
-		public float max;
-		public float minHealth;
-		public float maxHealth;
+		[FormerlySerializedAs("min")] public float minAppearence;
+        [FormerlySerializedAs("max")] public float maxAppearence;
+		[FormerlySerializedAs("minHealth")] public float minContent;
+		[FormerlySerializedAs("maxHealth")] public float maxContent;
 	}
 	
 	[CreateAssetMenu(fileName = "Data", menuName = "Rhythm/LevelData", order = 5)]

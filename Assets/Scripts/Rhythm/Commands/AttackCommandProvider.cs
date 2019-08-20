@@ -4,11 +4,11 @@ using Rhythm.Services;
 using Rhythm.Units;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Rhythm.Commands {
     public class AttackCommandProvider: CommandProvider {
         private Unit _closestEnemy;
-        private int _curStreakPower;
         private Vector3 _initPosition;
         private UnitService _unitService;
 
@@ -32,25 +32,17 @@ namespace Rhythm.Commands {
 
         public override void ExecutionFinished() {
             if (!_closestEnemy) {
-                StartCoroutine(MoveToInitPos());
+                unit.Agent.destination = _initPosition;
+                unit.Agent.speed = unit.MovementSpeed;
             }
-        }
-
-        private IEnumerator MoveToInitPos() {
-            float curTime = 0;
-            while (curTime < BeatInputService.NOTE_TIME * 2f) {
-                curTime += Time.deltaTime;
-                Vector3 dir = _initPosition - unit.transform.position;
-                unit.transform.Translate(Time.deltaTime * unit.MovementSpeed * dir.normalized);
-                yield return null;
-            }
+            Invoke(nameof(StopAgent), BeatInputService.NOTE_TIME * 2f);
         }
 
         public override void Executed(NoteQuality noteQuality, int streak) {
-            _closestEnemy = unit.GetClosestEnemy();
-            _curStreakPower = streak;
+            UpdateClosestVisibleEnemy();
             _initPosition = unit.transform.position;
-            unit.Agent.speed = unit.MovementSpeed + unit.MovementSpeed * CalcStreakBonus();
+            unit.Agent.isStopped = false;
+            unit.Agent.speed = unit.MovementSpeed + unit.MovementSpeed * streakBonus;
             if (_closestEnemy) {
                 Vector3 direction = (_closestEnemy.transform.position - unit.transform.position).normalized;
                 unit.Agent.destination = _closestEnemy.transform.position - direction * unit.Range;
@@ -65,22 +57,25 @@ namespace Rhythm.Commands {
             if (!_closestEnemy) {
                 return;
             }
-            float streakMod = CalcStreakBonus();
-            Vector3 direction = (_closestEnemy.transform.position - unit.transform.position).normalized;
-            unit.Agent.destination = _closestEnemy.transform.position - direction * unit.Range;
-            if (unit.Agent.path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                UnityEngine.AI.NavMeshHit hit;
-                if (unit.Agent.Raycast(unit.Agent.destination, out hit)) {
+            if (unit.IsInRange(_closestEnemy.transform)) {
+                float damage = (unit.Damage + unit.Damage * streakBonus) * Time.deltaTime;
+                _closestEnemy.TakeDamage(unit, damage);
+                unit.Agent.isStopped = true;
+            } else {
+                unit.Agent.isStopped = false;
+                Vector3 direction = (_closestEnemy.transform.position - unit.transform.position).normalized;
+                unit.Agent.destination = _closestEnemy.transform.position - direction * unit.Range * .9f;
+                NavMeshHit hit;
+                // if the maxrange target isn't reachable, set enemy as target
+                if (unit.Agent.SamplePathPosition(NavMesh.AllAreas, unit.Agent.remainingDistance, out hit)) {
+                    unit.Agent.destination = _closestEnemy.transform.position;
+                }
+                // if enemy target isn't reachable, set max reachable to target
+                if (unit.Agent.SamplePathPosition(NavMesh.AllAreas, unit.Agent.remainingDistance, out hit)) {
                     unit.Agent.destination = hit.position;
                 }
+                Debug.DrawLine(unit.transform.position, unit.Agent.destination);
             }
-            if (unit.IsInRange(_closestEnemy.transform)) {
-                _closestEnemy.TakeDamage(unit, streakMod);
-            }
-        }
-
-        private float CalcStreakBonus() {
-            return _curStreakPower * 1f / Constants.MAX_STREAK_POWER;
         }
     }
 }

@@ -28,7 +28,9 @@ namespace Rhythm.Services {
 				_unitsData.Add(unit.name, unit);
 			}
 			_createdUnits.Clear();
-		}
+            UnitAppeared += (unit) => Debug.Log("Appeared: " + unit.GetInstanceID());
+            UnitDisappeared += (unit) => Debug.Log("Disappeared: " + unit.GetInstanceID());
+        }
 
 		public void PostInitialize() {
 			ServiceLocator.Get<GameStateService>().SceneTransitionStarted += (from, to) => OnSceneTransitionStarted();
@@ -48,7 +50,7 @@ namespace Rhythm.Services {
             _createdUnits.Clear();
         }
 
-		public Unit CreateUnit(string name) {
+		public Unit CreateUnit(string name, OwnerType owner = OwnerType.NONE) {
 			UnitData unitData;
 			if (!_unitsData.TryGetValue(name, out unitData)) {
 				throw new Exception("Requested unit of type '" + name + "' not available." +
@@ -58,7 +60,7 @@ namespace Rhythm.Services {
 			Unit unit = Object.Instantiate(unitData.prefab);
 			_createdUnits.Add(unit.GetInstanceID(), unit);
             _visibleUnits.AddLast(unit);
-			unit.Initialize(unitData);
+			unit.Initialize(unitData, owner);
 			UnitCreated?.Invoke(unit);
 			return unit;
 		}
@@ -98,7 +100,10 @@ namespace Rhythm.Services {
         }
 
         public IEnumerable<Unit> GetAllEnemyUnits() {
-            return _createdUnits.Values.Where(unit => unit.Owner != OwnerType.PLAYER);
+            return _createdUnits.Values.Where(unit => unit.Owner == OwnerType.AI);
+        }
+        public IEnumerable<Unit> GetAllNeutralUnits() {
+            return _createdUnits.Values.Where(unit => unit.Owner == OwnerType.NEUTRAL);
         }
 
         public void Update(float deltaTime) {

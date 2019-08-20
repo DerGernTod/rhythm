@@ -46,6 +46,7 @@ namespace Rhythm.Songs {
         }
 
         public void ExecuteCommand(NoteQuality noteQuality, int streakLength) {
+            Debug.Log("Executing song " + Name);
             CommandExecuted?.Invoke(noteQuality, streakLength);
         }
 

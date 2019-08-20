@@ -6,13 +6,14 @@ using Rhythm.Tools;
 using Rhythm.Units;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Events;
 
 namespace Rhythm.Items {
-    [RequireComponent(typeof(SpriteRenderer))]
+    [RequireComponent(typeof(Unit))]
+    [RequireComponent(typeof(NavMeshObstacle))]
     [RequireComponent(typeof(BoxCollider2D))]
     public class ItemDeposit : MonoBehaviour {
-        public event UnityAction DepositDepleted;
         public event UnityAction<ItemData> ItemCollected;
         
 #pragma warning disable 0649
@@ -20,18 +21,26 @@ namespace Rhythm.Items {
         [SerializeField] private AnimationCurve itemSpawnYCurve;
 #pragma warning restore 0649
         
-        public float Health { get; private set; }
-        
+        public NavMeshObstacle Obstacle { get; private set; }
+
         private ItemData itemData;
+        private Unit _unit;
         private SpriteRenderer _spriteRenderer;
-        private UnitService _unitService;
-        private bool _wasVisible;
-        private float _maxHealth;
+        private float _maxContent;
+        private float _curContent;
 
         private void Awake() {
-            _spriteRenderer = GetComponent<SpriteRenderer>();
-            _unitService = ServiceLocator.Get<UnitService>();
-            _wasVisible = _spriteRenderer.isVisible;
+            _unit = GetComponent<Unit>();
+            Obstacle = GetComponent<NavMeshObstacle>();
+        }
+
+        private void Start() {
+            _spriteRenderer = _unit.Representation.GetComponentInChildren<SpriteRenderer>();
+            _spriteRenderer.sprite = itemData.depositSprite;
+            BoxCollider2D boxCollider2D = GetComponent<BoxCollider2D>();
+            boxCollider2D.isTrigger = true;
+            boxCollider2D.size = _spriteRenderer.size;
+            name = itemData.itemName + GetInstanceID();
         }
 
         public bool CanBeCollectedBy(ToolData toolData) {
@@ -43,26 +52,17 @@ namespace Rhythm.Items {
                    && itemData.requiredToolType == toolData.type;
         }
 
-        public void Initialize(ItemData data, float health) {
-            _spriteRenderer.sprite = data.depositSprite;
-            BoxCollider2D boxCollider2D = GetComponent<BoxCollider2D>();
-            boxCollider2D.isTrigger = true;
-            boxCollider2D.size = _spriteRenderer.size;
-            name = data.itemName + GetInstanceID();
+        public void Initialize(ItemData data, float content) {
             itemData = data;
-            Health = health;
-            _maxHealth = health;
+            _curContent = content;
+            _maxContent = content;
         }
 
         public void Collect(Unit collector, float damage) {
-            int prevHealth = Mathf.CeilToInt(Health);
-            Health = Mathf.Clamp(Health - damage, 0, _maxHealth);
-            if (Mathf.CeilToInt(Health) < prevHealth) {
+            int prevContent = Mathf.CeilToInt(_curContent);
+            _curContent = Mathf.Clamp(_curContent - damage, 0, _maxContent);
+            if (Mathf.CeilToInt(_curContent) < prevContent) {
                 SpawnItem(collector);
-            }
-            if (Health <= 0) {
-                Debug.Log(Time.time + ": Deposit " + name + " depleted");
-                DepositDepleted?.Invoke();
             }
         }
 
@@ -77,7 +77,7 @@ namespace Rhythm.Items {
             StartCoroutine(Coroutines.MoveAlongCurve(item.transform, itemSpawnYCurve, Vector3.up, 1f, false,
                 () => {
                     StartCoroutine(Coroutines.FadeColor(item.gameObject, transparent, 2, () => {
-                        if (Health <= 0) {
+                        if (_curContent <= 0) {
                             // todo: animate destruction
                             Destroy(gameObject);
                         }
@@ -86,25 +86,5 @@ namespace Rhythm.Items {
                 }));
         }
 
-        private void Update() {
-            if (Health <= 0) {
-                return;
-            }
-            if (!_wasVisible && _spriteRenderer.isVisible) {
-                IEnumerable<Unit> units = _unitService.GetAllPlayerUnits();
-                foreach (Unit unit in units) {
-                    unit.AddVisibleDeposit(this);
-                }
-            }
-
-            if (_wasVisible && !_spriteRenderer.isVisible) {
-                IEnumerable<Unit> units = _unitService.GetAllPlayerUnits();
-                foreach (Unit unit in units) {
-                    unit.RemoveVisibleDeposit(this);
-                }
-            }
-
-            _wasVisible = _spriteRenderer.isVisible;
-        }
     }
 }

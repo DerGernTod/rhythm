@@ -38,8 +38,10 @@ namespace Rhythm.State {
             _level = new GameObject("Level").AddComponent<Level>();
             _level.Initialize(levelData);
             Unit firstUnit = ServiceLocator.Get<UnitService>().CreateUnit("Circle");
+            Unit secondUnit = ServiceLocator.Get<UnitService>().CreateUnit("Circle");
             Unit drummer = ServiceLocator.Get<UnitService>().CreateUnit("Drummer");
             firstUnit.transform.Translate(Vector3.up * -8);
+            secondUnit.transform.Translate(Vector3.up * -8 + Vector3.right);
             drummer.transform.Translate(Vector3.up * -8.25f);
             _gameStateService.GameFinishing += OnGameFinishing;
             StartCoroutine(StartGame());

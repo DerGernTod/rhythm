@@ -15,7 +15,6 @@ using UnityEngine.AI;
 
 namespace Rhythm.Units {
     [RequireComponent(typeof(Collider2D))]
-    [RequireComponent(typeof(NavMeshAgent))]
 	public class Unit : MonoBehaviour {
 		private static int ids;
 #pragma warning disable 0649
@@ -23,8 +22,11 @@ namespace Rhythm.Units {
         [SerializeField] private UnitData startupUnitData;
 #pragma warning restore 0649
         public OwnerType Owner => owner;
+        public UnitType UnitType { get; private set; }
+        public GameObject Representation => _representation;
 		public float MovementSpeed { get; private set;}
         public float Health { get; private set; }
+        public float Damage { get; private set; }
         public float Range => _range;
         public bool IsDying { get; private set; }
         public bool IsVisible => _renderers.Any(renderer => renderer.isVisible);
@@ -35,7 +37,6 @@ namespace Rhythm.Units {
         private int _xp;
         private int _xpReward;
         private float _range;
-        private float _damage;
         private bool _wasVisible;
 
         private UnityAction _updateFunc;
@@ -49,8 +50,9 @@ namespace Rhythm.Units {
         private BeatInputService _beatInputService;
 		private GameStateService _gameStateService;
         private UnitService _unitService;
+        private GameObject _representation;
 
-		private void Awake() {
+        private void Awake() {
 			_updateFunc = Constants.Noop;
 			_depositsInSight = new List<ItemDeposit>();
             _enemiesInSight = new List<Unit>();
@@ -58,51 +60,73 @@ namespace Rhythm.Units {
             _beatInputService = ServiceLocator.Get<BeatInputService>();
             _gameStateService = ServiceLocator.Get<GameStateService>();
             _navMeshAgent = GetComponent<NavMeshAgent>();
+            _representation = transform.Find("Representation").gameObject;
         }
 
         private void Start() {
             _renderers = GetComponentsInChildren<SpriteRenderer>();
-            _navMeshAgent.updateUpAxis = false;
-            _navMeshAgent.updateRotation = false;
+            if (_navMeshAgent) {
+                _navMeshAgent.updateUpAxis = false;
+                _navMeshAgent.updateRotation = false;
+            }
             if (startupUnitData) {
-                Initialize(startupUnitData);
+                Initialize(startupUnitData, owner);
                 _unitService.AddUnit(this);
             }
         }
 
-        public void Initialize(UnitData unitData) {
+        public void Initialize(UnitData unitData, OwnerType assignedOwner) {
 
             _name = unitData.name;
             Health = unitData.health;
             MovementSpeed = unitData.movementSpeed;
-            if (owner == OwnerType.NONE) {
-                owner = OwnerType.PLAYER;
+            UnitType = unitData.type;
+            if (assignedOwner == OwnerType.NONE) {
+                assignedOwner = OwnerType.PLAYER;
             }
+            string targetLayerName = "Default";
+            switch (assignedOwner) {
+                case OwnerType.NONE:
+                    break;
+                case OwnerType.NEUTRAL:
+                    targetLayerName = "NeutralUnits";
+                    break;
+                case OwnerType.PLAYER:
+                    targetLayerName = "PlayerUnits";
+                    break;
+                case OwnerType.AI:
+                    targetLayerName = "AIUnits";
+                    break;
+            }
+            gameObject.layer = LayerMask.NameToLayer(targetLayerName);
+            owner = assignedOwner;
             _unitId = ids++;
             _toolData = unitData.toolData;
             _weaponData = unitData.weaponData;
             InitializeWeapon(unitData.weaponData);
             InitializeCommands(unitData);
 
-            _unitService.UnitAppeared += AddVisibleEnemy;
-            _unitService.UnitDisappeared += RemoveVisibleEnemy;
-            _unitService.UnitDying += RemoveVisibleEnemy;
+            _unitService.UnitAppeared += AddVisibleUnit;
+            _unitService.UnitDisappeared += RemoveVisibleUnit;
+            _unitService.UnitDying += RemoveVisibleUnit;
             _beatInputService.BeatLost += BeatLost;
             _beatInputService.ExecutionFinishing += ExecutionFinishing;
             _gameStateService.GameFinishing += OnGameFinishing;
         }
 
         private void InitializeWeapon(WeaponData weaponData) {
-            _damage = weaponData.damage;
+            if (!weaponData) {
+                return;
+            }
+            Damage = weaponData.damage;
             _range = weaponData.attackType == Weapons.AttackType.Melee ? .5f : 5f;
         }
 
         private void InitializeCommands(UnitData unitData) {
             _commandData = unitData.commandData;
-            if (Owner != OwnerType.PLAYER ) {
+            if (Owner != OwnerType.PLAYER || _commandData == null) {
                 return;
             }
-            // TODO: handle unitData.WeaponData
             for (int i = 0; i < _commandData.Length; i++) {
                 CommandData commandData = _commandData[i];
                 CommandProvider commandProvider = Instantiate(commandData.commandProviderPrefab, transform);
@@ -113,15 +137,24 @@ namespace Rhythm.Units {
             }
         }
 
-        public void AddVisibleEnemy(Unit enemy) {
-            if (enemy.Owner == Owner || enemy.IsDying) {
+        public void AddVisibleUnit(Unit unit) {
+            if (unit.IsDying) {
                 return;
             }
-            _enemiesInSight.Add(enemy);
+            if (unit.Owner == OwnerType.AI && unit.UnitType == UnitType.CHARACTER) {
+                _enemiesInSight.Add(unit);
+            } else if (unit.UnitType == UnitType.DEPOSIT) {
+                AddVisibleDeposit(unit.GetComponent<ItemDeposit>());
+            }
+            
         }
 
-        public void RemoveVisibleEnemy(Unit enemy) {
-            _enemiesInSight.Remove(enemy);
+        public void RemoveVisibleUnit(Unit unit) {
+            if (unit.UnitType == UnitType.CHARACTER) {
+                _enemiesInSight.Remove(unit);
+            } else if (unit.UnitType == UnitType.DEPOSIT) {
+                RemoveVisibleDeposit(unit.GetComponent<ItemDeposit>());
+            }
         }
 
         public Unit GetClosestEnemy() {
@@ -135,7 +168,7 @@ namespace Rhythm.Units {
         }
 
         public bool IsInRange(Transform target) {
-            return Vector3.SqrMagnitude(target.position - transform.position) <= _range;
+            return Vector3.Magnitude(target.position - transform.position) <= _range;
         }
 
         public ItemDeposit GetClosestDeposit() {
@@ -148,11 +181,14 @@ namespace Rhythm.Units {
 			return _depositsInSight[0];
 		}
 
-        public void TakeDamage(Unit damageDealer, float streakMultiplier) {
-            float prevHealth = Health;
-            float damage = (damageDealer._damage + damageDealer._damage * streakMultiplier) * Time.deltaTime;
+        public void TakeDamage(Unit damageDealer, float damage) {
+            int prevHealth = Mathf.CeilToInt(Health);
             Debug.Log(name + " took " + damage + " damage from " + damageDealer.name);
             Health -= damage;
+
+            if (Mathf.CeilToInt(Health) < prevHealth) {
+                iTween.PunchScale(_representation, Vector3.one * 1.1f, .5f);
+            }
             if (Health <= 0 && prevHealth > 0) {
                 IsDying = true;
                 _unitService.TriggerUnitDying(this);
@@ -167,14 +203,14 @@ namespace Rhythm.Units {
             Destroy(gameObject);
         }
 
-        public void AddVisibleDeposit(ItemDeposit deposit) {
+        private void AddVisibleDeposit(ItemDeposit deposit) {
 			if (!deposit.CanBeCollectedBy(_toolData)) {
 				return;
 			}
 			_depositsInSight.Add(deposit);
 		}
 
-		public void RemoveVisibleDeposit(ItemDeposit deposit) {
+		private void RemoveVisibleDeposit(ItemDeposit deposit) {
 			if (!deposit.CanBeCollectedBy(_toolData)) {
 				return;
 			}
@@ -182,16 +218,22 @@ namespace Rhythm.Units {
 		}
 
 		private void OnGameFinishing() {
-			StartCoroutine(WalkThroughFinishLine());
+            if (Owner == OwnerType.PLAYER) {
+                Debug.Log("Start walking through finish line, cur velocity: " + _navMeshAgent.velocity);
+                StartCoroutine(WalkThroughFinishLine());
+            }
 		}
 
-		private IEnumerator WalkThroughFinishLine() {
-			while (IsVisible) {
-				transform.Translate(MovementSpeed * Time.deltaTime * Vector2.up);
-				yield return null;
-			}
-		}
-
+        private IEnumerator WalkThroughFinishLine() {
+            // must have at least SOME value for x axis, no idea why
+            Vector3 targetVelocity = new Vector3(0.0001f, 1, 0);
+            while(IsVisible) {
+                yield return null;
+                _navMeshAgent.velocity = targetVelocity;
+            }
+            Debug.Log("Walk through finish line complete");
+        }
+        
 		private void Update() {
 			_updateFunc();
         }
@@ -200,9 +242,9 @@ namespace Rhythm.Units {
 			_beatInputService.BeatLost -= BeatLost;
 			_beatInputService.ExecutionFinishing -= ExecutionFinishing;
 			_gameStateService.GameFinishing -= OnGameFinishing;
-            _unitService.UnitAppeared -= AddVisibleEnemy;
-            _unitService.UnitDisappeared -= RemoveVisibleEnemy;
-            _unitService.UnitDying -= RemoveVisibleEnemy;
+            _unitService.UnitAppeared -= AddVisibleUnit;
+            _unitService.UnitDisappeared -= RemoveVisibleUnit;
+            _unitService.UnitDying -= RemoveVisibleUnit;
             _unitService.RemoveUnit(this);
             StopAllCoroutines();
 		}
@@ -219,5 +261,9 @@ namespace Rhythm.Units {
 			// do drop anims and sounds
 			_updateFunc = Constants.Noop;
 		}
-	}
+
+        public void Kill(Unit killer) {
+            TakeDamage(killer, 0);
+        }
+    }
 }
