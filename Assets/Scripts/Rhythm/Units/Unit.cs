@@ -29,7 +29,7 @@ namespace Rhythm.Units {
         public float Damage { get; private set; }
         public float Range => _range;
         public bool IsDying { get; private set; }
-        public bool IsVisible => _renderers.Any(renderer => renderer.isVisible);
+        public bool IsVisible => _renderers != null && _renderers.Any(renderer => renderer.isVisible);
         public NavMeshAgent Agent => _navMeshAgent;
 
         private int _unitId;
@@ -60,15 +60,15 @@ namespace Rhythm.Units {
             _beatInputService = ServiceLocator.Get<BeatInputService>();
             _gameStateService = ServiceLocator.Get<GameStateService>();
             _navMeshAgent = GetComponent<NavMeshAgent>();
+            if (_navMeshAgent) {
+                _navMeshAgent.updateUpAxis = false;
+                _navMeshAgent.updateRotation = false;
+            }
             _representation = transform.Find("Representation").gameObject;
         }
 
         private void Start() {
             _renderers = GetComponentsInChildren<SpriteRenderer>();
-            if (_navMeshAgent) {
-                _navMeshAgent.updateUpAxis = false;
-                _navMeshAgent.updateRotation = false;
-            }
             if (startupUnitData) {
                 Initialize(startupUnitData, owner);
                 _unitService.AddUnit(this);
@@ -105,10 +105,11 @@ namespace Rhythm.Units {
             _weaponData = unitData.weaponData;
             InitializeWeapon(unitData.weaponData);
             InitializeCommands(unitData);
-
-            _unitService.UnitAppeared += AddVisibleUnit;
-            _unitService.UnitDisappeared += RemoveVisibleUnit;
-            _unitService.UnitDying += RemoveVisibleUnit;
+            if (UnitType == UnitType.CHARACTER) {
+                _unitService.UnitAppeared += AddVisibleUnit;
+                _unitService.UnitDisappeared += RemoveVisibleUnit;
+                _unitService.UnitDying += RemoveVisibleUnit;
+            }
             _beatInputService.BeatLost += BeatLost;
             _beatInputService.ExecutionFinishing += ExecutionFinishing;
             _gameStateService.GameFinishing += OnGameFinishing;
@@ -183,11 +184,10 @@ namespace Rhythm.Units {
 
         public void TakeDamage(Unit damageDealer, float damage) {
             int prevHealth = Mathf.CeilToInt(Health);
-            Debug.Log(name + " took " + damage + " damage from " + damageDealer.name);
             Health -= damage;
 
             if (Mathf.CeilToInt(Health) < prevHealth) {
-                iTween.PunchScale(_representation, Vector3.one * 1.1f, .5f);
+                iTween.PunchScale(_representation, Vector3.one * 1.01f, .125f);
             }
             if (Health <= 0 && prevHealth > 0) {
                 IsDying = true;
@@ -231,20 +231,25 @@ namespace Rhythm.Units {
                 yield return null;
                 _navMeshAgent.velocity = targetVelocity;
             }
-            Debug.Log("Walk through finish line complete");
         }
         
 		private void Update() {
 			_updateFunc();
+            if (_navMeshAgent) {
+                Debug.DrawLine(transform.position, _navMeshAgent.nextPosition, Color.blue);
+                Debug.DrawLine(transform.position, _navMeshAgent.destination);
+            }
         }
 
 		private void OnDestroy() {
 			_beatInputService.BeatLost -= BeatLost;
 			_beatInputService.ExecutionFinishing -= ExecutionFinishing;
 			_gameStateService.GameFinishing -= OnGameFinishing;
-            _unitService.UnitAppeared -= AddVisibleUnit;
-            _unitService.UnitDisappeared -= RemoveVisibleUnit;
-            _unitService.UnitDying -= RemoveVisibleUnit;
+            if (UnitType == UnitType.CHARACTER) {
+                _unitService.UnitAppeared -= AddVisibleUnit;
+                _unitService.UnitDisappeared -= RemoveVisibleUnit;
+                _unitService.UnitDying -= RemoveVisibleUnit;
+            }
             _unitService.RemoveUnit(this);
             StopAllCoroutines();
 		}
@@ -263,7 +268,7 @@ namespace Rhythm.Units {
 		}
 
         public void Kill(Unit killer) {
-            TakeDamage(killer, 0);
+            TakeDamage(killer, Health);
         }
     }
 }

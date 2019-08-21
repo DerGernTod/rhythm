@@ -68,10 +68,12 @@ namespace Rhythm.Commands {
                 NavMeshHit hit;
                 // if the maxrange target isn't reachable, set enemy as target
                 if (unit.Agent.SamplePathPosition(NavMesh.AllAreas, unit.Agent.remainingDistance, out hit)) {
+                    Debug.Log("Maxrange target not reachable from " + unit.name + unit.gameObject.GetInstanceID() + ", taking enemy position");
                     unit.Agent.destination = _closestEnemy.transform.position;
                 }
                 // if enemy target isn't reachable, set max reachable to target
                 if (unit.Agent.SamplePathPosition(NavMesh.AllAreas, unit.Agent.remainingDistance, out hit)) {
+                    Debug.Log("Maxrange target not reachable from " + unit.name + unit.gameObject.GetInstanceID() + ", taking hit position");
                     unit.Agent.destination = hit.position;
                 }
                 Debug.DrawLine(unit.transform.position, unit.Agent.destination);

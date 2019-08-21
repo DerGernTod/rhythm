@@ -20,7 +20,7 @@ namespace Rhythm.Commands {
         }
 
         private void OnUnitDying(Unit unit) {
-            if (unit == _closestDeposit) {
+            if (_closestDeposit && unit == _closestDeposit.Unit) {
                 UpdateClosestDeposit();
             }
         }

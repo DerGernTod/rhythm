@@ -21,7 +21,7 @@ namespace Rhythm.Services {
         
         private void Awake() {
             BeatInputService beatInputService = new BeatInputService(this);
-            UnitService unitService = new UnitService();
+            UnitService unitService = new UnitService(this);
             services = new ServiceDictionary {
                 { typeof(SongService), new SongService() },
                 { typeof(BeatInputService), beatInputService },

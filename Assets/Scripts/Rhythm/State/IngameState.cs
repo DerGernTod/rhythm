@@ -10,6 +10,7 @@ using Rhythm.Units;
 using Rhythm.Utils;
 using TheNode.UI;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.UI;
 
 namespace Rhythm.State {
@@ -37,14 +38,16 @@ namespace Rhythm.State {
             background.Initialize(levelData);
             _level = new GameObject("Level").AddComponent<Level>();
             _level.Initialize(levelData);
-            Unit firstUnit = ServiceLocator.Get<UnitService>().CreateUnit("Circle");
-            Unit secondUnit = ServiceLocator.Get<UnitService>().CreateUnit("Circle");
-            Unit drummer = ServiceLocator.Get<UnitService>().CreateUnit("Drummer");
-            firstUnit.transform.Translate(Vector3.up * -8);
-            secondUnit.transform.Translate(Vector3.up * -8 + Vector3.right);
-            drummer.transform.Translate(Vector3.up * -8.25f);
+            CreateUnit("Circle", Vector3.up * -8 + Vector3.left);
+            CreateUnit("Circle", Vector3.up * -8 + Vector3.right);
+            CreateUnit("Drummer", Vector3.up * -8);
             _gameStateService.GameFinishing += OnGameFinishing;
             StartCoroutine(StartGame());
+        }
+
+        private void CreateUnit(string unitName, Vector3 translateTowards) {
+            Unit unit = ServiceLocator.Get<UnitService>().CreateUnit(unitName, translateTowards - Vector3.up);
+            unit.Agent.destination = translateTowards;
         }
 
         private IEnumerator StartGame() {

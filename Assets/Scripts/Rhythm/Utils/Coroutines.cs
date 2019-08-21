@@ -47,7 +47,7 @@ namespace Rhythm.Utils {
             float curTime = 0;
             while (curTime < time) {
                 curTime += Time.deltaTime;
-                Color targetColor = Color.Lerp(@from, target, curTime / time);
+                Color targetColor = Color.Lerp(from, target, curTime / time);
                 if (spriteRenderer) {
                     spriteRenderer.color = targetColor;
                 } else {

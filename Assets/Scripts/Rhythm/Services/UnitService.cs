@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Rhythm.Data;
 using Rhythm.Units;
 using Rhythm.Utils;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
@@ -22,14 +24,20 @@ namespace Rhythm.Services {
         public event UnityAction<Unit> UnitAppeared;
         public event UnityAction<Unit> UnitDisappeared;
 
+        private MonoBehaviour _coroutineProvider;
+
+        public UnitService(MonoBehaviour coroutineProvider) {
+            _coroutineProvider = coroutineProvider;
+        }
+
 		public void Initialize() {
 			UnitData[] units = Resources.LoadAll<UnitData>("data/units");
 			foreach (UnitData unit in units) {
 				_unitsData.Add(unit.name, unit);
 			}
 			_createdUnits.Clear();
-            UnitAppeared += (unit) => Debug.Log("Appeared: " + unit.GetInstanceID());
-            UnitDisappeared += (unit) => Debug.Log("Disappeared: " + unit.GetInstanceID());
+            UnitAppeared += (unit) => Debug.Log("Appeared: " + unit.GetInstanceID() + ", " + unit.name);
+            UnitDisappeared += (unit) => Debug.Log("Disppeared: " + unit.GetInstanceID() + ", " + unit.name);
         }
 
 		public void PostInitialize() {
@@ -50,14 +58,22 @@ namespace Rhythm.Services {
             _createdUnits.Clear();
         }
 
-		public Unit CreateUnit(string name, OwnerType owner = OwnerType.NONE) {
+		public Unit CreateUnit(string name, Vector3 position, OwnerType owner = OwnerType.NONE) {
 			UnitData unitData;
 			if (!_unitsData.TryGetValue(name, out unitData)) {
 				throw new Exception("Requested unit of type '" + name + "' not available." +
 				                    "Create a corresponding UnitData first.");
 			}
+            if (unitData.prefab.GetComponent<NavMeshAgent>()) {
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(position, out hit, 1, NavMesh.AllAreas)) {
+                    position = hit.position;
+                } else {
+                    Debug.LogWarning("Couldn't sample a position for new unit " + name + " on the navmesh!");
+                }
+            }
 
-			Unit unit = Object.Instantiate(unitData.prefab);
+			Unit unit = Object.Instantiate(unitData.prefab, position, Quaternion.identity);
 			_createdUnits.Add(unit.GetInstanceID(), unit);
             _visibleUnits.AddLast(unit);
 			unit.Initialize(unitData, owner);

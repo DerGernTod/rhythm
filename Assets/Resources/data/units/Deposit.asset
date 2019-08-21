@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 186df8052ee444bebf2a8b73a2d18647, type: 3}
   m_Name: Deposit
   m_EditorClassIdentifier: 
-  health: 2147483647
+  health: 99999
   movementSpeed: 0
   weaponData: {fileID: 0}
   toolData: {fileID: 0}

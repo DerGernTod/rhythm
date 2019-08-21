@@ -8,7 +8,7 @@ namespace Rhythm.Commands {
     public class MarchCommandProvider: CommandProvider {
 
         public override void ExecutionFinished() {
-            Invoke(nameof(StopAgent), BeatInputService.NOTE_TIME * 2);
+            Invoke(nameof(StopAgent), BeatInputService.NOTE_TIME * 1.5f);
         }
 
         public override void Executed(NoteQuality noteQuality, int streak) {

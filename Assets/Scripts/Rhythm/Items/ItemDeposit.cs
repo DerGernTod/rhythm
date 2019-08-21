@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using Rhythm.Data;
 using Rhythm.Persistence;
@@ -15,17 +17,22 @@ namespace Rhythm.Items {
     [RequireComponent(typeof(BoxCollider2D))]
     public class ItemDeposit : MonoBehaviour {
         public event UnityAction<ItemData> ItemCollected;
-        
+
+        private const float RAD_STEP = Mathf.PI * .1f;
+        private const float MAX_CHECK_DIST = 5;
+
 #pragma warning disable 0649
-        [SerializeField] private SpriteRenderer itemPrefab;
+        [SerializeField] private CollectedItem itemPrefab;
         [SerializeField] private AnimationCurve itemSpawnYCurve;
 #pragma warning restore 0649
         
         public NavMeshObstacle Obstacle { get; private set; }
+        public Unit Unit => _unit;
 
         private ItemData itemData;
         private Unit _unit;
         private SpriteRenderer _spriteRenderer;
+        private BoxCollider2D _collider;
         private float _maxContent;
         private float _curContent;
 
@@ -37,10 +44,40 @@ namespace Rhythm.Items {
         private void Start() {
             _spriteRenderer = _unit.Representation.GetComponentInChildren<SpriteRenderer>();
             _spriteRenderer.sprite = itemData.depositSprite;
-            BoxCollider2D boxCollider2D = GetComponent<BoxCollider2D>();
-            boxCollider2D.isTrigger = true;
-            boxCollider2D.size = _spriteRenderer.size;
+            _collider = GetComponent<BoxCollider2D>();
+            _collider.isTrigger = true;
             name = itemData.itemName + GetInstanceID();
+            MoveToUnobstructedArea();
+        }
+
+        private void MoveToUnobstructedArea() {
+            Vector3 initPos = transform.position;
+            float curDetectionDistance = 0;
+            float curDetectionRad = 0;
+            Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, Obstacle.radius);
+            NavMeshHit hit;
+            bool sampleWorked = NavMesh.SamplePosition(transform.position, out hit, Obstacle.radius, NavMesh.AllAreas);
+            Vector3 targetPos = initPos;
+            while (curDetectionDistance < MAX_CHECK_DIST && (!OnlyCollidesWithSelf(colliders) || !sampleWorked)) {
+                targetPos = initPos + curDetectionDistance * new Vector3(Mathf.Cos(curDetectionRad), Mathf.Sin(curDetectionRad), 0);
+                curDetectionDistance += .02f;
+                curDetectionRad += RAD_STEP * Mathf.Lerp(1, 0.25f, curDetectionDistance / MAX_CHECK_DIST);
+                sampleWorked = NavMesh.SamplePosition(targetPos, out hit, Obstacle.radius, NavMesh.AllAreas)
+                    || NavMesh.FindClosestEdge(targetPos, out hit, NavMesh.AllAreas);
+                if (sampleWorked) {
+                    targetPos = hit.position;
+                } 
+                colliders = Physics2D.OverlapCircleAll(new Vector2(targetPos.x, targetPos.y), Obstacle.radius);
+            }
+            if (curDetectionDistance >= MAX_CHECK_DIST) {
+                transform.position = initPos;
+            } else {
+                transform.position = targetPos;
+            }
+        }
+
+        private bool OnlyCollidesWithSelf(Collider2D[] colliders) {
+            return colliders.Length == 0 || (colliders.Length == 1 && colliders[0] == _collider);
         }
 
         public bool CanBeCollectedBy(ToolData toolData) {
@@ -67,23 +104,14 @@ namespace Rhythm.Items {
         }
 
         private void SpawnItem(Unit collector) {
-            SpriteRenderer item = Instantiate(itemPrefab, transform);
-            item.sprite = itemData.sprite;
-            Color prevColor = item.color;
-            Color transparent = new Color(prevColor.r, prevColor.g, prevColor.b, 0);
-            item.color = transparent;
+            CollectedItem item = Instantiate(itemPrefab);
+            item.transform.position = transform.position;
+            item.Initialize(itemData.sprite, itemSpawnYCurve);
             ItemCollected?.Invoke(itemData);
-            StartCoroutine(Coroutines.FadeColor(item.gameObject, prevColor, 1));
-            StartCoroutine(Coroutines.MoveAlongCurve(item.transform, itemSpawnYCurve, Vector3.up, 1f, false,
-                () => {
-                    StartCoroutine(Coroutines.FadeColor(item.gameObject, transparent, 2, () => {
-                        if (_curContent <= 0) {
-                            // todo: animate destruction
-                            Destroy(gameObject);
-                        }
-                        Destroy(item.gameObject);
-                    }));
-                }));
+            if (_curContent <= 0 && !_unit.IsDying) {
+                _unit.Kill(collector);
+                // todo: animate destruction
+            }
         }
 
     }

@@ -4,6 +4,7 @@ using Rhythm.Items;
 using Rhythm.Persistence;
 using Rhythm.Services;
 using UnityEngine;
+using UnityEngine.AI;
 using Random = UnityEngine.Random;
 
 namespace Rhythm.Levels {
